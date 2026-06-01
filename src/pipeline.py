@@ -1,15 +1,16 @@
-import os
 import sqlite3
+import sys
 import warnings
+from pathlib import Path
 
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
-    confusion_matrix,
     f1_score,
     precision_score,
     recall_score,
@@ -22,9 +23,9 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 # ---------------------------------------------------------------------------
 # 1. Load data
 # ---------------------------------------------------------------------------
-DB_PATH = os.path.join("data", "gas_monitoring.db")  # relative path per project spec
+DB_PATH = ROOT / "gas_monitoring.db.example"  # canonical source — never modified
 
-con = sqlite3.connect(DB_PATH)
+con = sqlite3.connect(str(DB_PATH))
 cursor = con.cursor()
 
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -35,7 +36,13 @@ df = pd.read_sql_query("SELECT * FROM gas_monitoring", con)
 con.close()
 
 # ---------------------------------------------------------------------------
-# 2. Feature / target split
+# 2. Data cleaning (in-memory only — rules discovered in eda.ipynb)
+# ---------------------------------------------------------------------------
+from clean import clean_gas_monitoring
+df = clean_gas_monitoring(df)
+
+# ---------------------------------------------------------------------------
+# 3. Feature / target split
 # ---------------------------------------------------------------------------
 # 'Session ID' is an identifier with no predictive value — dropped.
 # 'Activity Level' is the classification target.
@@ -50,14 +57,14 @@ categorical_cols = X.select_dtypes(include=["object"]).columns.tolist()
 X = pd.get_dummies(X, columns=categorical_cols, drop_first=True)
 
 # ---------------------------------------------------------------------------
-# 3. Train / test split  (stratified to preserve class distribution)
+# 4. Train / test split  (stratified to preserve class distribution)
 # ---------------------------------------------------------------------------
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.3, random_state=100, stratify=y
 )
 
 # ---------------------------------------------------------------------------
-# 4. Baseline Random Forest
+# 5. Baseline Random Forest
 # ---------------------------------------------------------------------------
 clf_default = RandomForestClassifier(
     n_estimators=100,       # standard starting point
@@ -76,8 +83,7 @@ print("\nClassification Report:")
 print(classification_report(y_test, y_pred_default, zero_division=0))
 
 # ---------------------------------------------------------------------------
-# 5. Hyperparameter tuning — n_estimators sweep
-#    Range covers meaningful values; very small forests (< 10) are unreliable.
+# 6. Hyperparameter tuning — n_estimators sweep
 # ---------------------------------------------------------------------------
 N_TREES_RANGE = [10, 50, 100, 150, 200, 250, 300]
 f1_list = []
@@ -99,7 +105,7 @@ print("\n=== n_estimators Sweep Results ===")
 print(results_df.to_string())
 
 # ---------------------------------------------------------------------------
-# 6. Best model — re-train with optimal n_estimators
+# 7. Best model — re-train with optimal n_estimators
 # ---------------------------------------------------------------------------
 best_n = int(results_df["f1_weighted"].idxmax())
 print(f"\nBest n_estimators: {best_n}")
@@ -121,45 +127,4 @@ print(f"F1 (wtd)  : {f1_score(y_test, y_pred_best, average='weighted', zero_divi
 print("\nClassification Report:")
 print(classification_report(y_test, y_pred_best, zero_division=0))
 
-# ---------------------------------------------------------------------------
-# 7. Confusion matrix plot
-# ---------------------------------------------------------------------------
-cm = confusion_matrix(y_test, y_pred_best)
-fig, ax = plt.subplots(figsize=(8, 6))
-im = ax.imshow(cm, interpolation="nearest", cmap="Blues")
-plt.colorbar(im, ax=ax)
-classes = clf_best.classes_
-tick_marks = np.arange(len(classes))
-ax.set_xticks(tick_marks)
-ax.set_xticklabels(classes, rotation=45, ha="right")
-ax.set_yticks(tick_marks)
-ax.set_yticklabels(classes)
-for i in range(cm.shape[0]):
-    for j in range(cm.shape[1]):
-        ax.text(j, i, str(cm[i, j]), ha="center", va="center",
-                color="white" if cm[i, j] > cm.max() / 2 else "black")
-ax.set_ylabel("True Label")
-ax.set_xlabel("Predicted Label")
-ax.set_title("Confusion Matrix — Optimized Random Forest")
-plt.tight_layout()
-plt.savefig("confusion_matrix_rf.png", dpi=150)
-plt.show()
-
-# ---------------------------------------------------------------------------
-# 8. Feature importance plot
-# ---------------------------------------------------------------------------
-feature_imp = (
-    pd.Series(clf_best.feature_importances_, index=X.columns)
-    .sort_values(ascending=False)
-    .head(15)  # top 15 for readability
-)
-
-fig, ax = plt.subplots(figsize=(10, 6))
-feature_imp.plot(kind="bar", ax=ax, color="steelblue")
-ax.set_ylabel("Mean Decrease in Impurity (Relative Importance)")
-ax.set_title("Top-15 Feature Importances — Optimized Random Forest")
-plt.tight_layout()
-plt.savefig("feature_importance_rf.png", dpi=150)
-plt.show()
-
-print("\nDone. Plots saved to confusion_matrix_rf.png and feature_importance_rf.png")
+print("\nDone.")
