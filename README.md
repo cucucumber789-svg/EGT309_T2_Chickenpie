@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project performs exploratory data analysis (EDA) on indoor air quality sensor data collected from an HVAC-monitored environment, then trains a Random Forest classifier to predict activity level from sensor readings. The notebook examines readings from multiple gas sensors (CO2, CO, Metal Oxide), temperature, humidity, and environmental context (HVAC mode, light level, activity level). The pipeline (`src/pipeline.py`) reads the raw `.example` database, applies the same cleaning rules discovered during EDA (`src/clean.py`), and trains a stratified Random Forest model — all output is console-only, no plot artifacts.
+This project performs exploratory data analysis (EDA) on indoor air quality sensor data collected from an HVAC-monitored environment, then trains classifiers to predict activity level from sensor readings. The notebook examines readings from multiple gas sensors (CO2, CO, Metal Oxide), temperature, humidity, and environmental context (HVAC mode, light level, activity level). Three models are implemented in `src/` — Random Forest (`model_rf.py`), Logistic Regression (`model_lr.py`), and k-Nearest Neighbors (`model_knn.py`) — each reading the raw `.example` database, applying the same cleaning rules discovered during EDA (`src/clean.py`), and outputting console-only results with no plot artifacts.
 
 ## Dataset
 
@@ -74,33 +74,36 @@ gas_monitoring.db.example  (canonical raw data, never modified)
         │
         └── src/
               ├── clean.py         # Cleaning rules extracted from EDA findings
-              │                      Called by pipeline.py only.
+              │                      Called by model files only.
               │
-              └── pipeline.py      # Loads .example → clean.py → trains model
-                                     Console-only output, no plot files.
+              ├── model_rf.py      # Random Forest (n_estimators sweep)
+              ├── model_lr.py      # Logistic Regression (scaled, multinomial)
+              └── model_knn.py     # k-Nearest Neighbors (placeholder)
 ```
 
-**Key point:** The EDA is research — it discovers the cleaning rules. `src/clean.py` is an engineering artifact that reimplements those rules. The pipeline imports only `clean.py`; it never touches the notebook.
+**Key point:** The EDA is research — it discovers the cleaning rules. `src/clean.py` is an engineering artifact that reimplements those rules. Each model imports only `clean.py`; none of them touch the notebook.
 
 ## Training
 
-Run the pipeline with a single command after installing dependencies:
+Run any model with a single command after installing dependencies:
 
 ```bash
 pip install -r requirements.txt
-python src/pipeline.py
+python src/model_rf.py   # Random Forest
+python src/model_lr.py   # Logistic Regression
+python src/model_knn.py  # k-Nearest Neighbors
 ```
 
-The pipeline performs these steps:
+Each model performs these steps:
 
 | Step | What happens |
 |------|-------------|
 | 1. Load | Reads `gas_monitoring.db.example` (10,000 rows, 14 columns) |
 | 2. Clean | Calls `clean_gas_monitoring()` from `src/clean.py` — caps outliers, imputes missing values, standardises labels |
 | 3. Split | Separates features from target (`Activity Level`), one-hot encodes categoricals, stratifies 70/30 train/test |
-| 4. Baseline | Trains a Random Forest (100 trees, balanced class weights) |
-| 5. Tune | Sweeps `n_estimators` from 10 to 300, picks the best F1 score |
-| 6. Final | Retrains with optimal trees, prints accuracy, precision, recall, F1, and full classification report |
+| 4. Scale | Applies `StandardScaler` to numeric features (except Random Forest, which is scale-invariant) |
+| 5. Train | Fits the classifier (RF sweeps `n_estimators` 10–300; LR uses multinomial with `max_iter=1000`) |
+| 6. Evaluate | Prints accuracy, precision, recall, F1, and full classification report |
 
 All output is printed to the console — no files are created, no popup windows appear.
 
@@ -110,7 +113,9 @@ All output is printed to the console — no files are created, no popup windows 
 ├── gas_monitoring.db.example  # Canonical raw data (never modified)
 ├── src/
 │   ├── clean.py               # Cleaning rules discovered during EDA (shared utility)
-│   └── pipeline.py            # Loads raw data, applies clean.py, trains classifier
+│   ├── model_rf.py            # Random Forest classifier (n_estimators sweep)
+│   ├── model_lr.py            # Logistic Regression classifier (scaled, multinomial)
+│   └── model_knn.py           # k-Nearest Neighbors classifier (placeholder)
 ├── requirements.txt
 └── README.md
 

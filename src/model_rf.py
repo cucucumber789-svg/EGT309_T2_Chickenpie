@@ -53,7 +53,7 @@ y = df[TARGET]
 X = df.drop(columns=DROP_COLS)
 
 # One-hot encode categorical features (Time of Day, HVAC Mode, Ambient Light, etc.)
-categorical_cols = X.select_dtypes(include=["object"]).columns.tolist()
+categorical_cols = X.select_dtypes(include=["object", "string"]).columns.tolist()
 X = pd.get_dummies(X, columns=categorical_cols, drop_first=True)
 
 # ---------------------------------------------------------------------------
