@@ -89,3 +89,53 @@ print("\nClassification Report:")
 print(classification_report(y_test, y_pred, zero_division=0))
 
 print("\nDone.")
+
+# ---------------------------------------------------------------------------
+# 6. KNN Hyperparameter Tuning (GridSearchCV)
+# ---------------------------------------------------------------------------
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
+
+param_grid = {
+    'n_neighbors': [3, 5, 7, 9, 11, 13, 15],
+    'metric'     : ['euclidean', 'manhattan', 'minkowski'],
+    'weights'    : ['uniform', 'distance'],
+    'p'          : [1, 2],   # only used when metric='minkowski'
+}
+
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+grid_search = GridSearchCV(
+    estimator  = KNeighborsClassifier(),
+    param_grid = param_grid,
+    scoring    = 'f1_weighted',
+    cv         = cv,
+    n_jobs     = -1,
+    verbose    = 1,
+)
+
+grid_search.fit(X_train, y_train)
+
+print("\n=== KNN Hyperparameter Tuning Results ===")
+print(f"Best Parameters : {grid_search.best_params_}")
+print(f"Best CV F1 Score: {grid_search.best_score_:.4f}")
+
+# ---------------------------------------------------------------------------
+# 7. Evaluate best model on test set
+# ---------------------------------------------------------------------------
+best_clf = grid_search.best_estimator_
+y_pred_tuned = best_clf.predict(X_test)
+
+print("\n=== Tuned KNN — Test Set Performance ===")
+print(f"Accuracy  : {accuracy_score(y_test, y_pred_tuned):.4f}")
+print(f"Precision : {precision_score(y_test, y_pred_tuned, average='weighted', zero_division=0):.4f}")
+print(f"Recall    : {recall_score(y_test, y_pred_tuned, average='weighted', zero_division=0):.4f}")
+print(f"F1 (wtd)  : {f1_score(y_test, y_pred_tuned, average='weighted', zero_division=0):.4f}")
+print("\nClassification Report (Tuned):")
+print(classification_report(y_test, y_pred_tuned, zero_division=0))
+
+# Comparison: baseline vs tuned
+print("\n=== Baseline vs Tuned Comparison ===")
+print(f"Baseline F1 : {f1_score(y_test, y_pred, average='weighted', zero_division=0):.4f}")
+print(f"Tuned F1    : {f1_score(y_test, y_pred_tuned, average='weighted', zero_division=0):.4f}")
+
+print("\nDone.")
