@@ -132,6 +132,10 @@ All output is printed to the console — no files are created, no popup windows 
 
 For an eldercare early warning system, F1-Score is selected as the primary evaluation metric over standard classification accuracy due to inherent class imbalances in smart-home sensor logs. Because elderly residents spend a disproportionate amount of time resting, the dataset is naturally heavily skewed toward "Low Activity" instances. Relying on standard accuracy would reward a naive model that consistently predicts the majority class while failing entirely to catch critical movement transitions. F1-Score mitigates this bias by calculating the precision and recall for each activity class independently and taking their unweighted average. This ensures that "Low", "Moderate", and "High" activity states are treated with equal importance, directly penalizing the pipeline if it fails to accurately detect less frequent but potentially life-saving activity shifts. 
 
+## Random Forest Model
+
+The model_rf.py implements a modular machine learning pipeline to train, tune, and evaluate a Random Forest classifier. Data ingestion is handled via a relative path from a local SQLite database, followed by preprocessing steps that exclude non-predictive features like Session ID and one-hot encode categorical variables. To ensure reproducibility and preserve class distributions, the dataset is divided into stratified training and testing subsets using a fixed random seed. The framework establishes a baseline using 100 trees and configures class_weight="balanced" to mitigate bias from the heavily skewed majority class. An automated hyperparameter sweep then evaluates a range of n_estimators (from 10 to 300) based on the F1-score. Finally, the pipeline extracts the optimal tree count, re-trains the champion model, and generates a comprehensive classification report detailing accuracy, precision, recall, and F1-score metrics.
+
 
 
 
