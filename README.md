@@ -4,6 +4,12 @@
 
 This project performs exploratory data analysis (EDA) on indoor air quality sensor data collected from an HVAC-monitored environment, then trains classifiers to predict activity level from sensor readings. The notebook examines readings from multiple gas sensors (CO2, CO, Metal Oxide), temperature, humidity, and environmental context (HVAC mode, light level, activity level). Three models are implemented in `src/` — Random Forest (`model_rf.py`), Logistic Regression (`model_lr.py`), and k-Nearest Neighbors (`model_knn.py`) — each reading the raw `.example` database, applying the same cleaning rules discovered during EDA (`src/clean.py`), and outputting console-only results with no plot artifacts.
 
+## Members 
+
+Wei Guan - Random Forest
+Shun Wei - Logistic Regression
+Derek - KNN Model
+
 ## Dataset
 
 - **File**: `gas_monitoring.db.example` (SQLite, 10,000 rows, 14 columns)
@@ -143,7 +149,4 @@ The model_lr.py script implements a structured machine learning pipeline to trai
 ## KNN model
 
 The model_knn.py script implements a structured machine learning pipeline to train, tune, and evaluate a K-Nearest Neighbors (KNN) classifier. Following database ingestion, the script drops non-predictive variables like Session ID, standardizes numerical features using StandardScaler to prevent larger-scale sensor values from dominating distance metrics, and encodes categorical attributes. The data is split into stratified training and testing subsets using a fixed random seed to ensure reproducibility. This distance-based instance framework is highly suited for eldercare monitoring because it captures non-linear environmental thresholds and distinct sensor clusters without making restrictive assumptions about data distribution. An automated hyperparameter optimization sweep is conducted via GridSearchCV using 5-fold cross-validation to evaluate neighbor counts, distance metrics, and weight configurations. Finally, the optimal parameters are extracted to re-train the final classifier, which is evaluated across accuracy, precision, recall, and F1-score performance dimensions.
-
-
-
 
