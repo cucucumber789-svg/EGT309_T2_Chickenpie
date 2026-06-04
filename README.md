@@ -144,8 +144,6 @@ The model_lr.py script implements a structured machine learning pipeline to trai
 
 The model_knn.py script implements a structured machine learning pipeline to train, tune, and evaluate a K-Nearest Neighbors (KNN) classifier. Following database ingestion, the script drops non-predictive variables like Session ID, standardizes numerical features using StandardScaler to prevent larger-scale sensor values from dominating distance metrics, and encodes categorical attributes. The data is split into stratified training and testing subsets using a fixed random seed to ensure reproducibility. This distance-based instance framework is highly suited for eldercare monitoring because it captures non-linear environmental thresholds and distinct sensor clusters without making restrictive assumptions about data distribution. An automated hyperparameter optimization sweep is conducted via GridSearchCV using 5-fold cross-validation to evaluate neighbor counts, distance metrics, and weight configurations. Finally, the optimal parameters are extracted to re-train the final classifier, which is evaluated across accuracy, precision, recall, and F1-score performance dimensions.
 
-=======
->>>>>>> parent of 5041808 (linear regression brief explanation)
 
 
 
