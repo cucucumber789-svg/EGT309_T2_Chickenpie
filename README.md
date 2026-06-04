@@ -136,6 +136,12 @@ For an eldercare early warning system, F1-Score is selected as the primary evalu
 
 The model_rf.py implements a modular machine learning pipeline to train, tune, and evaluate a Random Forest classifier. Data ingestion is handled via a relative path from a local SQLite database, followed by preprocessing steps that exclude non-predictive features like Session ID and one-hot encode categorical variables. To ensure reproducibility and preserve class distributions, the dataset is divided into stratified training and testing subsets using a fixed random seed. The framework establishes a baseline using 100 trees and configures class_weight="balanced" to mitigate bias from the heavily skewed majority class. An automated hyperparameter sweep then evaluates a range of n_estimators (from 10 to 300) based on the F1-score. Finally, the pipeline extracts the optimal tree count, re-trains the champion model, and generates a comprehensive classification report detailing accuracy, precision, recall, and F1-score metrics.
 
+## Linear regression
+
+The model_lr.py script implements a structured machine learning pipeline to train and evaluate a multinomial Logistic Regression classifier. Following database ingestion, the framework drops non-predictive features like Session ID, standardizes numerical features using StandardScaler to ensure optimization convergence, and applies one-hot encoding to categorical variables. The data is then partitioned into stratified training and testing subsets using a fixed random seed to guarantee reproducibility. This linear classification model is highly suited for eldercare monitoring as it offers a computationally efficient, low-latency baseline with exceptional interpretability. By providing explicit coefficients for each sensor input, the model allows developers to trace how specific environmental fluctuations influence activity level predictions, satisfying the need for explainable AI. Performance is finalized using a maximum iteration threshold of 1,000 and evaluated via accuracy, precision, recall, and F1-score metrics.
+
+
+
 
 
 
