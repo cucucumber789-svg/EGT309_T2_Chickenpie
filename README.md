@@ -89,30 +89,6 @@ gas_monitoring.db.example  (canonical raw data, never modified)
 
 **Key point:** The EDA is research — it discovers the cleaning rules. `src/clean.py` is an engineering artifact that reimplements those rules. Each model imports only `clean.py`; none of them touch the notebook.
 
-## Training
-
-Run any model with a single command after installing dependencies:
-
-```bash
-pip install -r requirements.txt
-python src/model_rf.py   # Random Forest
-python src/model_lr.py   # Logistic Regression
-python src/model_knn.py  # k-Nearest Neighbors
-```
-
-Each model performs these steps:
-
-| Step | What happens |
-|------|-------------|
-| 1. Load | Reads `gas_monitoring.db.example` (10,000 rows, 14 columns) |
-| 2. Clean | Calls `clean_gas_monitoring()` from `src/clean.py` — caps outliers, imputes missing values, standardises labels |
-| 3. Split | Separates features from target (`Activity Level`), one-hot encodes categoricals, stratifies 70/30 train/test |
-| 4. Scale | Applies `StandardScaler` to numeric features (except Random Forest, which is scale-invariant) |
-| 5. Train | Fits the classifier (RF sweeps `n_estimators` 10–300; LR uses multinomial with `max_iter=1000`) |
-| 6. Evaluate | Prints accuracy, precision, recall, F1, and full classification report |
-
-All output is printed to the console — no files are created, no popup windows appear.
-
 ## Project Structure
 
 ├── eda.ipynb                  # Research & visualisation (self-contained, inline cleaning cells)
@@ -138,15 +114,55 @@ All output is printed to the console — no files are created, no popup windows 
 
 For an eldercare early warning system, F1-Score is selected as the primary evaluation metric over standard classification accuracy due to inherent class imbalances in smart-home sensor logs. Because elderly residents spend a disproportionate amount of time resting, the dataset is naturally heavily skewed toward "Low Activity" instances. Relying on standard accuracy would reward a naive model that consistently predicts the majority class while failing entirely to catch critical movement transitions. F1-Score mitigates this bias by calculating the precision and recall for each activity class independently and taking their unweighted average. This ensures that "Low", "Moderate", and "High" activity states are treated with equal importance, directly penalizing the pipeline if it fails to accurately detect less frequent but potentially life-saving activity shifts. 
 
+## Terms
+
+**F1-Score** — The harmonic mean of precision and recall. Unlike accuracy (which counts correct vs incorrect), F1 balances false positives and false negatives. This is our primary metric because it punishes models that guess the majority class and ignore rare but critical events.
+
+**Precision** — Of all the times the model predicted a class (e.g. "High Activity"), how many were actually correct? High precision means few false alarms.
+
+**Recall** — Of all the actual instances of a class, how many did the model catch? High recall means few missed events.
+
+**Weighted F1 (wtd)** — Averages each class's F1 but multiplies each by the number of samples in that class. If Low Activity has 1730 samples and High Activity has 329, Low dominates the average. Weighted F1 looks good even if the model misses rare cases — not ideal for eldercare.
+
+**Macro F1** — Averages each class's F1 equally regardless of sample count. A low F1 on High Activity hurts the score just as much as a low F1 on Low Activity. This is the stricter metric used to select the best model, because detecting rare activity shifts matters most.
+
+**GridSearchCV** — An automated search that tries every combination of hyperparameters (e.g., different neighbor counts and distance metrics for KNN) using cross-validation, then picks the combination with the best score.
+
+**Multinomial** — A classification strategy that treats all classes simultaneously using a softmax function, producing a probability for each class that sums to 1. Used by Logistic Regression when there are 3+ categories.
+
 ## Random Forest Model
 
 The model_rf.py script implements a modular machine learning pipeline to train, tune, and evaluate a Random Forest classifier. Following database ingestion, the framework excludes non-predictive features like Session ID, one-hot encodes categorical variables, and splits the data into stratified training and testing subsets using a fixed seed to ensure reproducibility. This ensemble tree-based framework is exceptionally well-suited for the eldercare monitoring problem due to its high tolerance for non-linear feature relationships and complex multi-sensor interactions, such as matching a simultaneous spike in humidity and specific gas levels to indoor human movement. Furthermore, its inherent resistance to overfitting is critical given the heavily noisy, synthetic, and contaminated environmental attributes identified during data profiling. To address the severe class imbalance where resting states dominate the logs, the architecture configures class_weight="balanced" to strictly penalize minority class misclassifications. An automated hyperparameter sweep optimizes n_estimators (from 10 to 300) based on the F1-score, before extracting the optimal tree count to re-train the final champion model and generate comprehensive classification metrics.
 
 ## Logistic regression
 
-The model_lr.py script implements a structured machine learning pipeline to train and evaluate a multinomial Logistic Regression classifier. Following database ingestion, the framework drops non-predictive features like Session ID, standardizes numerical features using StandardScaler to ensure optimization convergence, and applies one-hot encoding to categorical variables. The data is then partitioned into stratified training and testing subsets using a fixed random seed to guarantee reproducibility. This linear classification model is highly suited for eldercare monitoring as it offers a computationally efficient, low-latency baseline with exceptional interpretability. By providing explicit coefficients for each sensor input, the model allows developers to trace how specific environmental fluctuations influence activity level predictions, satisfying the need for explainable AI. Performance is finalized using a maximum iteration threshold of 1,000 and evaluated via accuracy, precision, recall, and F1-score metrics.
+The model_lr.py script implements a structured machine learning pipeline to train and evaluate a multinomial Logistic Regression classifier. Following database ingestion, the framework drops non-predictive features like Session ID, standardizes numerical features using StandardScaler to ensure optimization convergence, and applies one-hot encoding to categorical variables. The data is then partitioned into stratified training and testing subsets using a fixed random seed to guarantee reproducibility. This linear classification model is highly suited for eldercare monitoring as it offers a computationally efficient, low-latency baseline with exceptional interpretability. By providing explicit coefficients for each sensor input, the model allows developers to trace how specific environmental fluctuations influence activity level predictions, satisfying the need for explainable AI. To address the severe class imbalance where resting states dominate the logs, `class_weight="balanced"` is configured to penalize minority class misclassifications. A regularization strength sweep tunes how aggressively the model simplifies its coefficients — preventing overfitting to noisy features (Temperature, Humidity) while preserving signal from the Metal Oxide and CO₂ sensors. The optimal value is selected based on macro F1-score before retraining the final champion model and generating comprehensive classification metrics.
 
 ## KNN model
 
 The model_knn.py script implements a structured machine learning pipeline to train, tune, and evaluate a K-Nearest Neighbors (KNN) classifier. Following database ingestion, the script drops non-predictive variables like Session ID, standardizes numerical features using StandardScaler to prevent larger-scale sensor values from dominating distance metrics, and encodes categorical attributes. The data is split into stratified training and testing subsets using a fixed random seed to ensure reproducibility. This distance-based instance framework is highly suited for eldercare monitoring because it captures non-linear environmental thresholds and distinct sensor clusters without making restrictive assumptions about data distribution. An automated hyperparameter optimization sweep is conducted via GridSearchCV using 5-fold cross-validation to evaluate neighbor counts, distance metrics, and weight configurations. Finally, the optimal parameters are extracted to re-train the final classifier, which is evaluated across accuracy, precision, recall, and F1-score performance dimensions.
+
+## Training
+
+Run any model with a single command after installing dependencies:
+
+```bash
+pip install -r requirements.txt
+python src/model_rf.py   # Random Forest
+python src/model_lr.py   # Logistic Regression
+python src/model_knn.py  # k-Nearest Neighbors
+```
+
+Each model performs these steps:
+
+| Step | What happens |
+|------|-------------|
+| 1. Load | Reads `gas_monitoring.db.example` (10,000 rows, 14 columns) |
+| 2. Clean | Calls `clean_gas_monitoring()` from `src/clean.py` — caps outliers, imputes missing values, standardises labels |
+| 3. Split | Separates features from target (`Activity Level`), one-hot encodes categoricals, stratifies 70/30 train/test |
+| 4. Scale | Applies `StandardScaler` to numeric features (except Random Forest, which is scale-invariant) |
+| 5. Train | Fits the classifier with tuning: RF sweeps `n_estimators` 10–300; LR sweeps regularization strength; KNN uses GridSearchCV over neighbors, metrics, and weights |
+| 6. Evaluate | Prints accuracy, precision, recall, F1, and full classification report |
+
+All output is printed to the console.
 

@@ -52,17 +52,6 @@ DROP_COLS = [TARGET, "Session ID"]
 y = df[TARGET]
 X = df.drop(columns=DROP_COLS)
 
-# Separate numeric and categorical columns for scaling
-numeric_cols = X.select_dtypes(include=["int64", "float64"]).columns.tolist()
-categorical_cols = X.select_dtypes(include=["object", "string"]).columns.tolist()
-
-# Scale numeric features (important for logistic regression convergence)
-scaler = StandardScaler()
-X[numeric_cols] = scaler.fit_transform(X[numeric_cols])
-
-# One-hot encode categorical features
-X = pd.get_dummies(X, columns=categorical_cols, drop_first=True)
-
 # ---------------------------------------------------------------------------
 # 4. Train / test split  (stratified, same seed across all models)
 # ---------------------------------------------------------------------------
@@ -70,22 +59,96 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.3, random_state=100, stratify=y
 )
 
+# Separate numeric and categorical columns for scaling
+numeric_cols = X_train.select_dtypes(include=["int64", "float64"]).columns.tolist()
+categorical_cols = X_train.select_dtypes(include=["object", "string"]).columns.tolist()
+
+# Scale numeric features (fit on train only to avoid data leakage)
+scaler = StandardScaler()
+X_train[numeric_cols] = scaler.fit_transform(X_train[numeric_cols])
+X_test[numeric_cols] = scaler.transform(X_test[numeric_cols])
+
+# One-hot encode categorical features
+X_train = pd.get_dummies(X_train, columns=categorical_cols, drop_first=True)
+X_test = pd.get_dummies(X_test, columns=categorical_cols, drop_first=True)
+
+# Align columns (ensure test has same dummy columns as train)
+X_test = X_test.reindex(columns=X_train.columns, fill_value=0)
+
 # ---------------------------------------------------------------------------
-# 5. Logistic Regression (multinomial)
+# 5. Multinomial Logistic Regression
 # ---------------------------------------------------------------------------
 clf = LogisticRegression(
     max_iter=1000,
     random_state=42,
+    class_weight='balanced',
 )
 clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 
-print("\n=== Logistic Regression (Multinomial) ===")
+print("\n=== Multinomial Logistic Regression ===")
 print(f"Accuracy  : {accuracy_score(y_test, y_pred):.4f}")
 print(f"Precision : {precision_score(y_test, y_pred, average='weighted', zero_division=0):.4f}")
 print(f"Recall    : {recall_score(y_test, y_pred, average='weighted', zero_division=0):.4f}")
 print(f"F1 (wtd)  : {f1_score(y_test, y_pred, average='weighted', zero_division=0):.4f}")
+print(f"F1 (macro): {f1_score(y_test, y_pred, average='macro', zero_division=0):.4f}")
 print("\nClassification Report:")
 print(classification_report(y_test, y_pred, zero_division=0))
+
+# ---------------------------------------------------------------------------
+# 6. Hyperparameter tuning — regularization sweep
+# ---------------------------------------------------------------------------
+C_VALUES = [0.001, 0.01, 0.1, 1, 10, 100]
+f1_list = []
+
+for C in C_VALUES:
+    clf_tmp = LogisticRegression(
+        C=C,
+        max_iter=1000,
+        random_state=42,
+        class_weight='balanced',
+    )
+    clf_tmp.fit(X_train, y_train)
+    y_pred_tmp = clf_tmp.predict(X_test)
+    f1_macro = f1_score(y_test, y_pred_tmp, average='macro', zero_division=0)
+    f1_wtd = f1_score(y_test, y_pred_tmp, average='weighted', zero_division=0)
+    f1_list.append({"Strength": C, "f1_macro": round(f1_macro, 4), "f1_weighted": round(f1_wtd, 4)})
+
+results_df = pd.DataFrame(f1_list).set_index("Strength")
+print("\n=== Regularization Sweep Results ===")
+print(results_df.to_string())
+
+# ---------------------------------------------------------------------------
+# 7. Best model — re-train with optimal strength
+# ---------------------------------------------------------------------------
+best_C = float(results_df["f1_macro"].idxmax())
+print(f"\nBest regularization strength: {best_C}")
+
+clf_best = LogisticRegression(
+    C=best_C,
+    max_iter=1000,
+    random_state=42,
+    class_weight='balanced',
+)
+clf_best.fit(X_train, y_train)
+y_pred_best = clf_best.predict(X_test)
+
+print("\n=== Optimized Multinomial Logistic Regression ===")
+print(f"Accuracy  : {accuracy_score(y_test, y_pred_best):.4f}")
+print(f"Precision : {precision_score(y_test, y_pred_best, average='weighted', zero_division=0):.4f}")
+print(f"Recall    : {recall_score(y_test, y_pred_best, average='weighted', zero_division=0):.4f}")
+print(f"F1 (wtd)  : {f1_score(y_test, y_pred_best, average='weighted', zero_division=0):.4f}")
+print(f"F1 (macro): {f1_score(y_test, y_pred_best, average='macro', zero_division=0):.4f}")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred_best, zero_division=0))
+
+# ---------------------------------------------------------------------------
+# 8. Baseline vs Tuned Comparison
+# ---------------------------------------------------------------------------
+print("\n=== Baseline vs Tuned Comparison ===")
+print(f"Baseline F1 (macro): {f1_score(y_test, y_pred, average='macro', zero_division=0):.4f}")
+print(f"Tuned    F1 (macro): {f1_score(y_test, y_pred_best, average='macro', zero_division=0):.4f}")
+print(f"Baseline F1 (wtd)  : {f1_score(y_test, y_pred, average='weighted', zero_division=0):.4f}")
+print(f"Tuned    F1 (wtd)  : {f1_score(y_test, y_pred_best, average='weighted', zero_division=0):.4f}")
 
 print("\nDone.")
