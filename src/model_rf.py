@@ -79,6 +79,7 @@ y_pred_default = clf_default.predict(X_test)
 print("\n=== Baseline Random Forest ===")
 print(f"Accuracy  : {accuracy_score(y_test, y_pred_default):.4f}")
 print(f"F1 (wtd)  : {f1_score(y_test, y_pred_default, average='weighted', zero_division=0):.4f}")
+print(f"F1 (macro): {f1_score(y_test, y_pred_default, average='macro', zero_division=0):.4f}")
 print("\nClassification Report:")
 print(classification_report(y_test, y_pred_default, zero_division=0))
 
@@ -97,17 +98,17 @@ for n_trees in N_TREES_RANGE:
     )
     clf_tmp.fit(X_train, y_train)
     y_pred_tmp = clf_tmp.predict(X_test)
-    f1 = f1_score(y_test, y_pred_tmp, average="weighted", zero_division=0)
-    f1_list.append({"n_trees": n_trees, "f1_weighted": round(f1, 4)})
+    f1 = f1_score(y_test, y_pred_tmp, average="macro", zero_division=0)
+    f1_list.append({"n_trees": n_trees, "f1_macro": round(f1, 4)})
 
 results_df = pd.DataFrame(f1_list).set_index("n_trees")
-print("\n=== n_estimators Sweep Results ===")
+print("\n=== n_estimators Sweep Results (macro F1) ===")
 print(results_df.to_string())
 
 # ---------------------------------------------------------------------------
 # 7. Best model — re-train with optimal n_estimators
 # ---------------------------------------------------------------------------
-best_n = int(results_df["f1_weighted"].idxmax())
+best_n = int(results_df["f1_macro"].idxmax())
 print(f"\nBest n_estimators: {best_n}")
 
 clf_best = RandomForestClassifier(
@@ -124,6 +125,7 @@ print(f"Accuracy  : {accuracy_score(y_test, y_pred_best):.4f}")
 print(f"Precision : {precision_score(y_test, y_pred_best, average='weighted', zero_division=0):.4f}")
 print(f"Recall    : {recall_score(y_test, y_pred_best, average='weighted', zero_division=0):.4f}")
 print(f"F1 (wtd)  : {f1_score(y_test, y_pred_best, average='weighted', zero_division=0):.4f}")
+print(f"F1 (macro): {f1_score(y_test, y_pred_best, average='macro', zero_division=0):.4f}")
 print("\nClassification Report:")
 print(classification_report(y_test, y_pred_best, zero_division=0))
 

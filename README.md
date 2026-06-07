@@ -97,8 +97,12 @@ gas_monitoring.db.example  (canonical raw data, never modified)
 
 ## Requirements
 
-- Python 3.x
-- Libraries listed in `requirements.txt`
+- **Python 3.x**
+- **pandas** — Data loading, manipulation, and one-hot encoding
+- **numpy** — Numerical operations (NaN handling, median imputation)
+- **scikit-learn** — ML models (RF, LR, KNN), preprocessing (StandardScaler), metrics, cross-validation
+- **seaborn** — Statistical visualisations (used in EDA notebook only)
+- **matplotlib** — Plotting (used in EDA notebook only)
 
 ## Metrics used
 
@@ -106,33 +110,57 @@ For an eldercare early warning system, F1-Score is selected as the primary evalu
 
 ## Terms
 
-**F1-Score** — The harmonic mean of precision and recall. Unlike accuracy (which counts correct vs incorrect), F1 balances false positives and false negatives. This is our primary metric because it punishes models that guess the majority class and ignore rare but critical events.
+### Metrics (all models)
+
+**F1-Score** — The harmonic mean of precision and recall. Unlike accuracy (which counts correct vs incorrect), F1 balances false positives and false negatives. This is our primary metric because it punishes models that guess the majority class and ignore rare but critical events. A high F1-Score means both precision and recall are strong — few false alarms and few missed detections.
 
 **Precision** — Of all the times the model predicted a class (e.g. "High Activity"), how many were actually correct? High precision means few false alarms.
 
 **Recall** — Of all the actual instances of a class, how many did the model catch? High recall means few missed events.
 
-**Weighted F1 (wtd)** — Averages each class's F1 but multiplies each by the number of samples in that class. If Low Activity has 1730 samples and High Activity has 329, Low dominates the average. Weighted F1 looks good even if the model misses rare cases — not ideal for eldercare.
+**Weighted F1 (wtd)** — Averages each class's F1 weighted by the number of samples in that class. This gives a representative view of overall performance since larger classes contribute more — if you randomly sample a prediction, this score reflects expected accuracy. However, because Low Activity makes up 57.7% of the dataset, a strong score on Low can mask poor performance on Moderate or High Activity. This is not ideal for eldercare where detecting rare events matters most. Weighted F1 is reported alongside macro F1 to give a complete picture of both per-sample and per-class performance. A high weighted F1 means the model performs well on the majority class (Low Activity), but can still miss rare events if macro F1 is low.
 
-**Macro F1** — Averages each class's F1 equally regardless of sample count. A low F1 on High Activity hurts the score just as much as a low F1 on Low Activity. This is the stricter metric used to select the best model, because detecting rare activity shifts matters most.
+**Macro F1** — While weighted F1 reflects per-sample accuracy, macro F1 tells you whether the model works for ALL classes. It averages each class's F1 equally regardless of sample count, so a low F1 on High Activity hurts the score just as much as a low F1 on Low Activity. This is the stricter metric used to select the best model, because detecting rare activity shifts matters most. Together with weighted F1, macro ensures the model performs well on common cases without ignoring the critical rare ones. A high macro F1 means the model performs well on ALL classes equally — harder to achieve but safer for eldercare, since a rare missed event is penalised as much as a common one.
+
+### Preprocessing (LR, KNN)
+
+**StandardScaler** — A preprocessing step that rescales numeric features to mean 0 and variance 1. Required by LR so L2 regularisation treats all features fairly; required by KNN so large-scale features don't dominate distance calculations.
+
+### Shared Configuration (RF, LR)
+
+**class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
+
+### Random Forest
+
+**Ensemble** — A technique that combines multiple weak models (decision trees) to produce a stronger prediction. Random Forest builds hundreds of trees on random subsets of data and averages their outputs, reducing overfitting compared to a single tree.
+
+**n_estimators** — The number of decision trees in the Random Forest. More trees generally improve performance but increase training time. RF sweeps this from 10 to 300 to find the optimal value.
+
+### Logistic Regression
+
+**Multinomial** — A classification strategy that treats all classes simultaneously using a softmax function, producing a probability for each class that sums to 1.
+
+**L2 regularization** — The default penalty in logistic regression. It adds the sum of squared coefficients to the loss function, penalising large coefficients and preventing overfitting. In scikit-learn 1.8, L2 is auto-selected when using the lbfgs solver — even though `penalty='l2'` is no longer written explicitly in code.
+
+**Regularization strength (C)** — Controls how much the model is allowed to grow its coefficients by controlling the L2 penalty. Small C means strong regularization (simpler model, less overfitting); large C means weak regularization (more complex, can overfit). This is the primary tuning knob for LR.
+
+**L-BFGS** — The default optimisation algorithm used by Logistic Regression. It iteratively adjusts coefficients to minimise the loss function (error + L2 penalty). Unlike tree-based models (RF) or distance-based models (KNN), LR needs an optimiser to find its coefficients.
+
+### K-Nearest Neighbors
 
 **GridSearchCV** — An automated search that tries every combination of hyperparameters (e.g., different neighbor counts and distance metrics for KNN) using cross-validation, then picks the combination with the best score.
 
-**Multinomial** — A classification strategy that treats all classes simultaneously using a softmax function, producing a probability for each class that sums to 1. Used by Logistic Regression when there are 3+ categories.
-
-**Regularization strength (C)** — Controls how much the model is allowed to grow its coefficients. Small C means strong regularization (simpler model, less overfitting); large C means weak regularization (more complex, can overfit). In logistic regression, this is the primary tuning knob.
-
 ## Random Forest
 
-The model_rf.py script implements a modular machine learning pipeline to train, tune, and evaluate a Random Forest classifier. Following database ingestion, the framework excludes non-predictive features like Session ID, one-hot encodes categorical variables, and splits the data into stratified training and testing subsets using a fixed seed to ensure reproducibility. This ensemble tree-based framework is exceptionally well-suited for the eldercare monitoring problem due to its high tolerance for non-linear feature relationships and complex multi-sensor interactions, such as matching a simultaneous spike in humidity and specific gas levels to indoor human movement. Furthermore, its inherent resistance to overfitting is critical given the heavily noisy, synthetic, and contaminated environmental attributes identified during data profiling. To address the severe class imbalance where resting states dominate the logs, the architecture configures `class_weight="balanced"` to strictly penalize minority class misclassifications. An automated hyperparameter sweep optimizes n_estimators (from 10 to 300) based on the F1-score, before extracting the optimal tree count to re-train the final champion model and generate comprehensive classification metrics.
+An ensemble of decision trees tolerant of non-linear sensor interactions and resistant to noisy data (see Terms — Ensemble, n_estimators). Uses `class_weight="balanced"` (see Terms — class_weight) for class imbalance. Sweeps n_estimators 10 to 300, selecting the best value via macro F1-score.
 
 ## Logistic Regression
 
-The model_lr.py script implements a structured machine learning pipeline to train and evaluate a multinomial Logistic Regression classifier. Following database ingestion, the framework drops non-predictive features like Session ID, standardizes numerical features using StandardScaler to ensure optimization convergence, and applies one-hot encoding to categorical variables. The data is then partitioned into stratified training and testing subsets using a fixed random seed to guarantee reproducibility. This linear classification model is highly suited for eldercare monitoring as it offers a computationally efficient, low-latency baseline with exceptional interpretability. By providing explicit coefficients for each sensor input, the model allows developers to trace how specific environmental fluctuations influence activity level predictions, satisfying the need for explainable AI. To address the severe class imbalance where resting states dominate the logs, `class_weight="balanced"` is configured to penalize minority class misclassifications. A regularization strength sweep (C from 0.001 to 100) tunes how aggressively the model simplifies its coefficients — preventing overfitting to noisy features (Temperature, Humidity) while preserving signal from the Metal Oxide and CO₂ sensors. The optimal value is selected based on macro F1-score before retraining the final champion model and generating comprehensive classification metrics.
+A linear classifier valued for interpretability — coefficients trace which sensors drive predictions (see Terms — Multinomial, L2 regularization, Regularization strength (C), L-BFGS). StandardScaler ensures fair L2 penalisation (see Terms — StandardScaler). Uses `class_weight="balanced"` (see Terms — class_weight). Sweeps C 0.001 to 100 via macro F1-score, suppressing noisy features (Temperature, Humidity) while preserving sensor signal.
 
 ## K-Nearest Neighbors
 
-The model_knn.py script implements a structured machine learning pipeline to train, tune, and evaluate a K-Nearest Neighbors (KNN) classifier. Following database ingestion, the script drops non-predictive variables like Session ID, standardizes numerical features using StandardScaler to prevent larger-scale sensor values from dominating distance metrics, and encodes categorical attributes. The data is split into stratified training and testing subsets using a fixed random seed to ensure reproducibility. This distance-based instance framework is highly suited for eldercare monitoring because it captures non-linear environmental thresholds and distinct sensor clusters without making restrictive assumptions about data distribution. An automated hyperparameter optimization sweep is conducted via GridSearchCV using 5-fold cross-validation to evaluate neighbor counts, distance metrics, and weight configurations. Finally, the optimal parameters are extracted to re-train the final classifier, which is evaluated across accuracy, precision, recall, and F1-score performance dimensions.
+A distance-based classifier that captures non-linear thresholds and sensor clusters (see Terms — GridSearchCV). StandardScaler prevents large-scale sensors from dominating distance (see Terms — StandardScaler). Tunes neighbor counts, distance metrics, and weight configurations via GridSearchCV with 5-fold CV and macro F1 scoring.
 
 ## Training
 
@@ -156,5 +184,4 @@ Each model performs these steps:
 | 5. Train | Fits the classifier with tuning: RF sweeps `n_estimators` 10–300; LR sweeps regularization strength; KNN uses GridSearchCV over neighbors, metrics, and weights |
 | 6. Evaluate | Prints accuracy, precision, recall, F1, and full classification report |
 
-All output is printed to the console — no files are created, no popup windows appear.
-
+All output is printed to the console
