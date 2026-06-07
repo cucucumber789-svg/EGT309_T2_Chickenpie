@@ -6,9 +6,9 @@ This project performs exploratory data analysis (EDA) on indoor air quality sens
 
 ## Members 
 
-Wei Guan - Random Forest
-Shun Wei - Logistic Regression
-Derek - KNN Model
+- Wei Guan - Random Forest
+- Shun Wei - Logistic Regression
+- Derek - KNN Model
 
 ## Dataset
 
