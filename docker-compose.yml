@@ -1,0 +1,10 @@
+services:
+  rf:
+    build: .
+    command: python src/model_rf.py
+  lr:
+    build: .
+    command: python src/model_lr.py
+  knn:
+    build: .
+    command: python src/model_knn.py

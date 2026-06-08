@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.git/
+.gitignore
+*.db
+eda.ipynb
+README.md

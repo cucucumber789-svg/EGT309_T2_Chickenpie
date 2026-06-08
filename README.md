@@ -164,6 +164,8 @@ A distance-based classifier that captures non-linear thresholds and sensor clust
 
 ## Training
 
+### Local
+
 Run any model with a single command after installing dependencies:
 
 ```bash
@@ -171,6 +173,18 @@ pip install -r requirements.txt
 python src/model_rf.py   # Random Forest
 python src/model_lr.py   # Logistic Regression
 python src/model_knn.py  # k-Nearest Neighbors
+```
+
+### Docker
+
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) on your machine
+2. Build the image and run any model:
+
+```bash
+docker compose build
+docker compose run rf   # Random Forest
+docker compose run lr   # Logistic Regression
+docker compose run knn  # k-Nearest Neighbors
 ```
 
 Each model performs these steps:
