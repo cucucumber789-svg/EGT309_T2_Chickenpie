@@ -1,4 +1,3 @@
-import sqlite3
 import sys
 import warnings
 from pathlib import Path
@@ -7,6 +6,15 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
+
+from preprocess import (
+    encode_categoricals,   # one-hot encode + align train/test columns
+    load_data,             # load gas_monitoring table from SQLite
+    scale_features,        # StandardScaler — required by distance-based models
+    split_features_target, # separate X (features) and y (Activity Level)
+)
+
+from clean import clean_gas_monitoring  # cap outliers, impute missing, standardise labels
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
@@ -17,7 +25,6 @@ from sklearn.metrics import (
     recall_score,
 )
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 import joblib
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -27,31 +34,17 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 # 1. Load data
 # ---------------------------------------------------------------------------
 DB_PATH = ROOT / "gas_monitoring.db.example"
-
-con = sqlite3.connect(str(DB_PATH))
-cursor = con.cursor()
-
-cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-table_names = [row[0] for row in cursor.fetchall()]
-print("Tables in database:", table_names)
-
-df = pd.read_sql_query("SELECT * FROM gas_monitoring", con)
-con.close()
+df = load_data(DB_PATH)
 
 # ---------------------------------------------------------------------------
 # 2. Data cleaning (in-memory only)
 # ---------------------------------------------------------------------------
-from clean import clean_gas_monitoring
 df = clean_gas_monitoring(df)
 
 # ---------------------------------------------------------------------------
 # 3. Feature / target split
 # ---------------------------------------------------------------------------
-TARGET = "Activity Level"
-DROP_COLS = [TARGET, "Session ID"]
-
-y = df[TARGET]
-X = df.drop(columns=DROP_COLS)
+X, y = split_features_target(df)
 
 # ---------------------------------------------------------------------------
 # 4. Train / test split  (stratified, same seed across all models)
@@ -60,21 +53,8 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.3, random_state=100, stratify=y
 )
 
-# Separate numeric and categorical columns for scaling
-numeric_cols = X_train.select_dtypes(include=["int64", "float64"]).columns.tolist()
-categorical_cols = X_train.select_dtypes(include=["object", "string"]).columns.tolist()
-
-# Scale numeric features (fit on train only to avoid data leakage)
-scaler = StandardScaler()
-X_train[numeric_cols] = scaler.fit_transform(X_train[numeric_cols])
-X_test[numeric_cols] = scaler.transform(X_test[numeric_cols])
-
-# One-hot encode categorical features
-X_train = pd.get_dummies(X_train, columns=categorical_cols, drop_first=True)
-X_test = pd.get_dummies(X_test, columns=categorical_cols, drop_first=True)
-
-# Align columns (ensure test has same dummy columns as train)
-X_test = X_test.reindex(columns=X_train.columns, fill_value=0)
+X_train, X_test = scale_features(X_train, X_test)
+X_train, X_test = encode_categoricals(X_train, X_test)
 
 # ---------------------------------------------------------------------------
 # 5. Multinomial Logistic Regression

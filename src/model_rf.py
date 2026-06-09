@@ -1,4 +1,3 @@
-import sqlite3
 import sys
 import warnings
 from pathlib import Path
@@ -7,6 +6,16 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
+
+from preprocess import (
+    encode_categoricals,   # one-hot encode + align train/test columns
+    load_data,             # load gas_monitoring table from SQLite
+    split_features_target, # separate X (features) and y (Activity Level)
+)
+# Note: scale_features intentionally omitted — tree-based models are scale-invariant
+
+from clean import clean_gas_monitoring  # cap outliers, impute missing, standardise labels
+
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score,
@@ -24,45 +33,27 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 # ---------------------------------------------------------------------------
 # 1. Load data
 # ---------------------------------------------------------------------------
-DB_PATH = ROOT / "gas_monitoring.db.example"  # canonical source — never modified
-
-con = sqlite3.connect(str(DB_PATH))
-cursor = con.cursor()
-
-cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-table_names = [row[0] for row in cursor.fetchall()]
-print("Tables in database:", table_names)
-
-df = pd.read_sql_query("SELECT * FROM gas_monitoring", con)
-con.close()
+DB_PATH = ROOT / "gas_monitoring.db.example"
+df = load_data(DB_PATH)
 
 # ---------------------------------------------------------------------------
 # 2. Data cleaning (in-memory only — rules discovered in eda.ipynb)
 # ---------------------------------------------------------------------------
-from clean import clean_gas_monitoring
 df = clean_gas_monitoring(df)
 
 # ---------------------------------------------------------------------------
 # 3. Feature / target split
 # ---------------------------------------------------------------------------
-# 'Session ID' is an identifier with no predictive value — dropped.
-# 'Activity Level' is the classification target.
-TARGET = "Activity Level"
-DROP_COLS = [TARGET, "Session ID"]
-
-y = df[TARGET]
-X = df.drop(columns=DROP_COLS)
-
-# One-hot encode categorical features (Time of Day, HVAC Mode, Ambient Light, etc.)
-categorical_cols = X.select_dtypes(include=["object", "string"]).columns.tolist()
-X = pd.get_dummies(X, columns=categorical_cols, drop_first=True)
+X, y = split_features_target(df)
 
 # ---------------------------------------------------------------------------
-# 4. Train / test split  (stratified to preserve class distribution)
+# 4. Train / test split  (stratified, same seed across all models)
 # ---------------------------------------------------------------------------
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.3, random_state=100, stratify=y
 )
+
+X_train, X_test = encode_categoricals(X_train, X_test)
 
 # ---------------------------------------------------------------------------
 # 5. Baseline Random Forest

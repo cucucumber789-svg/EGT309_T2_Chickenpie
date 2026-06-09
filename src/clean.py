@@ -24,6 +24,7 @@ ACTIVITY_MAP = {
 
 
 def clean_gas_monitoring(df: pd.DataFrame) -> pd.DataFrame:
+    # Applies cleaning rules from eda.ipynb: caps outliers, imputes missing values, standardises labels
     df.loc[df['Temperature'] > 60, 'Temperature'] = np.nan
     df['Temperature'] = df['Temperature'].fillna(df['Temperature'].median())
 
