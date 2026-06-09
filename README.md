@@ -220,17 +220,33 @@ The code defines a data cleaning function, clean_gas_monitoring(), which takes a
 
 **Macro F1** — While weighted F1 reflects per-sample accuracy, macro F1 tells you whether the model works for ALL classes. It averages each class's F1 equally regardless of sample count, so a low F1 on High Activity hurts the score just as much as a low F1 on Low Activity. This is the stricter metric used to select the best model, because detecting rare activity shifts matters most. Together with weighted F1, macro ensures the model performs well on common cases without ignoring the critical rare ones. A high macro F1 means the model performs well on ALL classes equally — harder to achieve but safer for eldercare, since a rare missed event is penalised as much as a common one.
 
-### Preprocessing (LR, KNN)
-
-**StandardScaler** — A preprocessing step that rescales numeric features to mean 0 and variance 1. Required by LR so L2 regularisation treats all features fairly; required by KNN so large-scale features don't dominate distance calculations.
-
-### Shared Configuration (RF, LR)
-
-**class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
-
 ## Metrics used (Recommended)
 
 For an eldercare early warning system, F1-Score is selected as the primary evaluation metric over standard classification accuracy due to inherent class imbalances in smart-home sensor logs. Because elderly residents spend a disproportionate amount of time resting, the dataset is naturally heavily skewed toward "Low Activity" instances. Relying on standard accuracy would reward a naive model that consistently predicts the majority class while failing entirely to catch critical movement transitions. F1-Score mitigates this bias by calculating the precision and recall for each activity class independently and taking their unweighted average. This ensures that "Low", "Moderate", and "High" activity states are treated with equal importance, directly penalizing the pipeline if it fails to accurately detect less frequent but potentially life-saving activity shifts.
+
+### Random Forest Metrics
+
+The Random Forest model was optimized through a hyperparameter tuning process that evaluated different numbers of decision trees (n_estimators) to identify the most effective configuration. The tuning results showed a gradual improvement in macro F1-score from 0.5270 with 10 trees to a peak of 0.5623 with 100 trees, demonstrating that increasing the number of trees enhanced the model’s ability to generalize and classify multiple activity levels more effectively. The selected configuration of 100 trees achieved the highest overall balance across classes, resulting in an accuracy of 68.6%, precision of 69.2%, recall of 68.6%, and a weighted F1-score of 67.3%.
+
+### Logistic Regression Metrics
+
+The Logistic Regression model achieved an accuracy of 60.7%, with a precision of 64.6%, recall of 60.7%, and a weighted F1-score of 62.2%. Hyperparameter tuning was conducted by testing different regularization strengths, with 0.001 identified as the optimal value, producing the highest macro F1-score of 52.3% and weighted F1-score of 62.2%. Compared to the baseline model, tuning resulted in a measurable improvement, increasing the macro F1-score from 50.7% to 52.3% and the weighted F1-score from 60.6% to 62.2%, demonstrating enhanced overall classification performance. The model performed best on the Low Activity class, achieving an F1-score of 0.75, while delivering moderate performance for Moderate Activity (F1-score: 0.50) and High Activity (F1-score: 0.33). Overall, the tuning process successfully improved the model’s ability to generalize across classes, resulting in a more balanced and reliable classifier for activity level prediction.
+
+### K-Nearest Neighbors Metrics
+
+The K-Nearest Neighbors (KNN) model was improved through hyperparameter tuning, where 84 different parameter combinations were tested using 5-fold cross-validation. The best-performing configuration used 5 neighbors, the Manhattan distance metric, and distance-based weighting. After tuning, the model achieved an accuracy of 65.3%, precision of 63.7%, recall of 65.3%, weighted F1-score of 64.2%, and macro F1-score of 52.4%. The tuning process successfully improved the model's performance, increasing the macro F1-score from 47.2% to 52.4% and the weighted F1-score from 59.5% to 64.2%. The model performed best in identifying Low Activity cases, while also showing reasonable performance for Moderate Activity. Overall, hyperparameter tuning made the KNN model more accurate, balanced, and reliable for classifying activity levels.
+
+## Preprocessing (LR, KNN)
+
+**StandardScaler** — A preprocessing step that rescales numeric features to mean 0 and variance 1. Required by LR so L2 regularisation treats all features fairly; required by KNN so large-scale features don't dominate distance calculations.
+
+## Shared Configuration (RF, LR)
+
+**class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
+
+## Comparison
+
+
 
 ## Training
 
