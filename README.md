@@ -136,10 +136,6 @@ A linear classifier valued for interpretability — coefficients trace which sen
 
 A distance-based classifier that captures non-linear thresholds and sensor clusters (see Terms — GridSearchCV). StandardScaler prevents large-scale sensors from dominating distance (see Terms — StandardScaler). Tunes neighbor counts, distance metrics, and weight configurations via GridSearchCV with 5-fold CV and macro F1 scoring.
 
-### Metrics used (Recommended)
-
-For an eldercare early warning system, F1-Score is selected as the primary evaluation metric over standard classification accuracy due to inherent class imbalances in smart-home sensor logs. Because elderly residents spend a disproportionate amount of time resting, the dataset is naturally heavily skewed toward "Low Activity" instances. Relying on standard accuracy would reward a naive model that consistently predicts the majority class while failing entirely to catch critical movement transitions. F1-Score mitigates this bias by calculating the precision and recall for each activity class independently and taking their unweighted average. This ensures that "Low", "Moderate", and "High" activity states are treated with equal importance, directly penalizing the pipeline if it fails to accurately detect less frequent but potentially life-saving activity shifts.
-
 ## Tuning
 
 ### Random Forest
@@ -183,6 +179,10 @@ For an eldercare early warning system, F1-Score is selected as the primary evalu
 ### Shared Configuration (RF, LR)
 
 **class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
+
+## Metrics used (Recommended)
+
+For an eldercare early warning system, F1-Score is selected as the primary evaluation metric over standard classification accuracy due to inherent class imbalances in smart-home sensor logs. Because elderly residents spend a disproportionate amount of time resting, the dataset is naturally heavily skewed toward "Low Activity" instances. Relying on standard accuracy would reward a naive model that consistently predicts the majority class while failing entirely to catch critical movement transitions. F1-Score mitigates this bias by calculating the precision and recall for each activity class independently and taking their unweighted average. This ensures that "Low", "Moderate", and "High" activity states are treated with equal importance, directly penalizing the pipeline if it fails to accurately detect less frequent but potentially life-saving activity shifts.
 
 ## Training
 
