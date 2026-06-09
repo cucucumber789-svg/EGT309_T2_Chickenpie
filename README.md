@@ -140,6 +140,28 @@ A distance-based classifier that captures non-linear thresholds and sensor clust
 
 For an eldercare early warning system, F1-Score is selected as the primary evaluation metric over standard classification accuracy due to inherent class imbalances in smart-home sensor logs. Because elderly residents spend a disproportionate amount of time resting, the dataset is naturally heavily skewed toward "Low Activity" instances. Relying on standard accuracy would reward a naive model that consistently predicts the majority class while failing entirely to catch critical movement transitions. F1-Score mitigates this bias by calculating the precision and recall for each activity class independently and taking their unweighted average. This ensures that "Low", "Moderate", and "High" activity states are treated with equal importance, directly penalizing the pipeline if it fails to accurately detect less frequent but potentially life-saving activity shifts.
 
+## Tuning
+
+### Random Forest
+
+**Ensemble** — A technique that combines multiple weak models (decision trees) to produce a stronger prediction. Random Forest builds hundreds of trees on random subsets of data and averages their outputs, reducing overfitting compared to a single tree.
+
+**n_estimators** — The number of decision trees in the Random Forest. More trees generally improve performance but increase training time. RF sweeps this from 10 to 300 to find the optimal value.
+
+### Logistic Regression
+
+**Multinomial** — A classification strategy that treats all classes simultaneously using a softmax function, producing a probability for each class that sums to 1.
+
+**L2 regularization** — The default penalty in logistic regression. It adds the sum of squared coefficients to the loss function, penalising large coefficients and preventing overfitting. In scikit-learn 1.8, L2 is auto-selected when using the lbfgs solver — even though `penalty='l2'` is no longer written explicitly in code.
+
+**Regularization strength (C)** — Controls how much the model is allowed to grow its coefficients by controlling the L2 penalty. Small C means strong regularization (simpler model, less overfitting); large C means weak regularization (more complex, can overfit). This is the primary tuning knob for LR.
+
+**L-BFGS** — The default optimisation algorithm used by Logistic Regression. It iteratively adjusts coefficients to minimise the loss function (error + L2 penalty). Unlike tree-based models (RF) or distance-based models (KNN), LR needs an optimiser to find its coefficients.
+
+### K-Nearest Neighbors
+
+**GridSearchCV** — An automated search that tries every combination of hyperparameters (e.g., different neighbor counts and distance metrics for KNN) using cross-validation, then picks the combination with the best score.
+
 ## Terms
 
 ### Metrics (all models)
@@ -161,28 +183,6 @@ For an eldercare early warning system, F1-Score is selected as the primary evalu
 ### Shared Configuration (RF, LR)
 
 **class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
-
-### Tuning
-
-## Random Forest
-
-**Ensemble** — A technique that combines multiple weak models (decision trees) to produce a stronger prediction. Random Forest builds hundreds of trees on random subsets of data and averages their outputs, reducing overfitting compared to a single tree.
-
-**n_estimators** — The number of decision trees in the Random Forest. More trees generally improve performance but increase training time. RF sweeps this from 10 to 300 to find the optimal value.
-
-## Logistic Regression
-
-**Multinomial** — A classification strategy that treats all classes simultaneously using a softmax function, producing a probability for each class that sums to 1.
-
-**L2 regularization** — The default penalty in logistic regression. It adds the sum of squared coefficients to the loss function, penalising large coefficients and preventing overfitting. In scikit-learn 1.8, L2 is auto-selected when using the lbfgs solver — even though `penalty='l2'` is no longer written explicitly in code.
-
-**Regularization strength (C)** — Controls how much the model is allowed to grow its coefficients by controlling the L2 penalty. Small C means strong regularization (simpler model, less overfitting); large C means weak regularization (more complex, can overfit). This is the primary tuning knob for LR.
-
-**L-BFGS** — The default optimisation algorithm used by Logistic Regression. It iteratively adjusts coefficients to minimise the loss function (error + L2 penalty). Unlike tree-based models (RF) or distance-based models (KNN), LR needs an optimiser to find its coefficients.
-
-## K-Nearest Neighbors
-
-**GridSearchCV** — An automated search that tries every combination of hyperparameters (e.g., different neighbor counts and distance metrics for KNN) using cross-validation, then picks the combination with the best score.
 
 ## Training
 
