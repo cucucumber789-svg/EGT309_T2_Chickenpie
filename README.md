@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project performs exploratory data analysis (EDA) on indoor air quality sensor data collected from an HVAC-monitored environment, then trains classifiers to predict activity level from sensor readings. The notebook examines readings from multiple gas sensors (CO2, CO, Metal Oxide), temperature, humidity, and environmental context (HVAC mode, light level, activity level). Three models are implemented in `src/` — Random Forest (`model_rf.py`), Logistic Regression (`model_lr.py`), and k-Nearest Neighbors (`model_knn.py`) — each reading the raw `.example` database, applying the same cleaning rules discovered during EDA (`src/clean.py`), and sharing preprocessing pipelines through `src/preprocess.py`. All output prints to the console with no plot artifacts.
+This project performs exploratory data analysis (EDA) on indoor air quality sensor data collected from an HVAC-monitored environment, then trains classifiers to predict activity level from sensor readings. The notebook examines readings from multiple gas sensors (CO2, CO, Metal Oxide), temperature, humidity, and environmental context (HVAC mode, light level, activity level). Three models are implemented in `src/` — Random Forest (`model_rf.py`), Logistic Regression (`model_lr.py`), and k-Nearest Neighbors (`model_knn.py`) — each reading the raw `.example` database, applying the same cleaning rules discovered during EDA (`src/lib/clean.py`), and sharing preprocessing pipelines through `src/lib/`. Hard-coded values are centralised in `src/lib/config.py`. All output prints to the console with no plot artifacts.
 
 ## Members 
 
@@ -79,29 +79,32 @@ gas_monitoring.db.example  (canonical raw data, never modified)
         │     │  Self-contained — no imports from src/.
         │
         └── src/
-              ├── clean.py         # Cleaning rules discovered during EDA
-              │                      (imported by all 3 model files)
+              ├── lib/
+              │   ├── __init__.py    # Package marker
+              │   ├── config.py      # Centralised constants (seeds, splits, model params)
+              │   ├── load_data.py   # SQLite load, feature/target split, train/test split
+              │   ├── preprocess.py  # StandardScaler + one-hot encoding
+              │   └── clean.py       # Cleaning rules discovered during EDA
               │
-              ├── preprocess.py    # Shared preprocessing: load, split, scale, encode
-              │                      (imported by all 3 model files)
+              ├── models/            # Saved tuned models (gitignored *.joblib files)
+              │   └── .gitkeep       # Placeholder to track the directory
               │
-              ├── models/          # Saved tuned models (gitignored *.joblib files)
-              │   └── .gitkeep     # Placeholder to track the directory
-              │
-              ├── model_rf.py      # Random Forest (n_estimators sweep)
-              ├── model_lr.py      # Logistic Regression (scaled, regularization sweep)
-              └── model_knn.py     # k-Nearest Neighbors (GridSearchCV tuning)
+              ├── model_rf.py        # Random Forest (n_estimators sweep)
+              ├── model_lr.py        # Logistic Regression (scaled, regularization sweep)
+              └── model_knn.py       # k-Nearest Neighbors (GridSearchCV tuning)
 ├── requirements.txt
 └── README.md
 ```
 
 **How shared modules work:**
 
-`clean.py` and `preprocess.py` are shared utility modules imported by all 3 model files:
+`lib/` is a Python package containing shared utility modules imported by all 3 model files:
 
 ```python
-from clean import clean_gas_monitoring
-from preprocess import load_data, split_features_target, scale_features, encode_categoricals
+from lib.config import RANDOM_STATE, ZERO_DIVISION, LR_C_VALUES   # (or RF_*, KNN_*)
+from lib.load_data import load_data, split_data, split_features_target
+from lib.preprocess import encode_categoricals, scale_features
+from lib.clean import clean_gas_monitoring
 ```
 
 Each model then calls these functions by name:
@@ -110,12 +113,30 @@ Each model then calls these functions by name:
 df = load_data(DB_PATH)
 df = clean_gas_monitoring(df)
 X, y = split_features_target(df)
-X_train, X_test, y_train, y_test = train_test_split(X, y, ...)
+X_train, X_test, y_train, y_test = split_data(X, y)
 X_train, X_test = scale_features(X_train, X_test)        # LR, KNN only
 X_train, X_test = encode_categoricals(X_train, X_test)
 ```
 
-When a model calls `load_data()`, Python executes the function body inside `preprocess.py`'s own namespace — `sqlite3`, `pandas`, and `StandardScaler` are private to that module and invisible to the caller. The model file never imports or sees them. This encapsulation keeps each model script focused on model-specific logic (training, tuning, evaluation) while the shared infrastructure lives in dedicated utility files.
+`lib/` is designed so you can customise data loading, preprocessing rules, or model parameters without editing the model scripts. Each model file imports what it needs from `lib.*` and uses config constants instead of inline literals:
+
+```python
+from lib.config import RANDOM_STATE, LR_MAX_ITER
+from lib.load_data import load_data, split_data
+from lib.preprocess import scale_features
+```
+
+To change a parameter — for example, `TEST_SIZE` or a KNN `n_neighbors` value — edit `lib/config.py` and re-run the model. The model files themselves stay untouched. This separation also makes it easy to compare runs after tweaking a single config value.
+
+When a model calls `load_data()`, Python executes the function body inside `lib.load_data`'s own namespace — `sqlite3`, `pandas`, and `train_test_split` are private to that module and invisible to the caller. The model file never imports or sees them. This encapsulation keeps each model script focused on model-specific logic (training, tuning, evaluation) while the shared infrastructure lives in the `lib/` package.
+
+**Why multiple files instead of one?** Each file in `lib/` addresses a concern that changes for a different reason:
+- `config.py` — the only file you need to touch when experimenting with hyperparameters, seeds, or split ratios
+- `clean.py` — evolves when EDA reveals new data issues or cleaning rules change
+- `preprocess.py` — changes when you swap scalers, encoding strategy, or pipeline steps
+- `load_data.py` — rarely changes (database schema or split strategy updates)
+
+If everything lived in one file, every tweak — even changing `TEST_SIZE` — would mean opening a monolithic utility with mixed concerns. Separating them keeps each change focused and makes the project easier to navigate.
 
 > **Gitignore notes:**
 > - `*.db` — Local database copies (e.g. `gas_monitoring.db`) are regenerated by the notebook from `gas_monitoring.db.example`. The `.example` suffix is the committed canonical source; tracking local `.db` files would cause accidental drift between developers.
@@ -237,9 +258,9 @@ Each model performs these steps:
 | Step | What happens |
 |------|-------------|
 | 1. Load | Reads `gas_monitoring.db.example` (10,000 rows, 14 columns) |
-| 2. Clean | Calls `clean_gas_monitoring()` from `src/clean.py` — caps outliers, imputes missing values, standardises labels |
-| 3. Split | Calls `split_features_target()` to separate features from target (`Activity Level`), stratifies 70/30 train/test |
-| 4. Scale & Encode | Calls `scale_features()` (`StandardScaler`) + `encode_categoricals()` (one-hot encoding + column alignment) from `preprocess.py`. RF skips scaling (tree-based models are scale-invariant) |
+| 2. Clean | Calls `clean_gas_monitoring()` from `src/lib/clean.py` — caps outliers, imputes missing values, standardises labels |
+| 3. Split | Calls `split_features_target()` to separate features from target (`Activity Level`), then `split_data()` for stratified 70/30 train/test |
+| 4. Scale & Encode | Calls `scale_features()` (`StandardScaler`) + `encode_categoricals()` (one-hot encoding + column alignment) from `src/lib/preprocess.py`. RF skips scaling (tree-based models are scale-invariant) |
 | 5. Train baseline | Fits default classifier, prints accuracy, precision, recall, F1, and classification report |
 | 6. Tune | Hyperparameter search: RF sweeps `n_estimators` 10–300; LR sweeps regularization strength `C`; KNN uses `GridSearchCV` over neighbors, metrics, and weights |
 | 7. Train tuned | Re-fits classifier with best hyperparameters, prints accuracy, precision, recall, F1, and classification report |
