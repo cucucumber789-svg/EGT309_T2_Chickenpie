@@ -244,9 +244,9 @@ The K-Nearest Neighbors (KNN) model was improved through hyperparameter tuning, 
 
 **class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
 
-## Comparison
+## Best Models
 
-
+Random Forest was the best-performing model because it achieved the highest accuracy (68.6%), Macro F1-score (56.2%) and Weighted F1-score (67.3%). These results show that it was the most effective at classifying the different activity levels of elderly residents using environmental sensor data. KNN was the second-best model, achieving 65.3% accuracy and a Macro F1-score of 52.4%, showing good performance but slightly lower overall results than Random Forest. Logistic Regression had the lowest performance, with 60.7% accuracy and a Macro F1-score of 52.3%. Since the goal is to accurately identify activity levels and support an early warning system for elderly care, Random Forest is the most suitable model as it provides the most reliable and balanced predictions across all activity categories.
 
 ## Training
 
