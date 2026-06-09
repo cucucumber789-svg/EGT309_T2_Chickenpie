@@ -195,8 +195,10 @@ Each model performs these steps:
 | 2. Clean | Calls `clean_gas_monitoring()` from `src/clean.py` — caps outliers, imputes missing values, standardises labels |
 | 3. Split | Separates features from target (`Activity Level`), one-hot encodes categoricals, stratifies 70/30 train/test |
 | 4. Scale | Applies `StandardScaler` to numeric features (except Random Forest, which is scale-invariant) |
-| 5. Train | Fits the classifier with tuning: RF sweeps `n_estimators` 10–300; LR sweeps regularization strength; KNN uses GridSearchCV over neighbors, metrics, and weights |
-| 6. Evaluate | Prints accuracy, precision, recall, F1, and full classification report |
-| 7. Compare | Prints a side-by-side Baseline vs Tuned comparison of macro F1 and weighted F1 to quantify improvement from tuning |
+| 5. Train baseline | Fits default classifier, prints accuracy, precision, recall, F1, and classification report |
+| 6. Tune | Hyperparameter search: RF sweeps `n_estimators` 10–300; LR sweeps regularization strength `C`; KNN uses `GridSearchCV` over neighbors, metrics, and weights |
+| 7. Train tuned | Re-fits classifier with best hyperparameters, prints accuracy, precision, recall, F1, and classification report |
+| 8. Compare | Prints a side-by-side Baseline vs Tuned comparison of macro F1 and weighted F1 to quantify improvement from tuning |
+| 9. Save | Prompts user to save the tuned model with `joblib` (y/n) to `src/models/` |
 
 All output is printed to the console

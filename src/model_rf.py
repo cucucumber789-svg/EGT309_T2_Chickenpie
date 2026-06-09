@@ -16,6 +16,7 @@ from sklearn.metrics import (
     recall_score,
 )
 from sklearn.model_selection import train_test_split
+import joblib
 
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -137,5 +138,17 @@ print(f"Baseline F1 (macro): {f1_score(y_test, y_pred_default, average='macro', 
 print(f"Tuned    F1 (macro): {f1_score(y_test, y_pred_best, average='macro', zero_division=0):.4f}")
 print(f"Baseline F1 (wtd)  : {f1_score(y_test, y_pred_default, average='weighted', zero_division=0):.4f}")
 print(f"Tuned    F1 (wtd)  : {f1_score(y_test, y_pred_best, average='weighted', zero_division=0):.4f}")
+
+# ---------------------------------------------------------------------------
+# 9. Optional — save tuned model
+# ---------------------------------------------------------------------------
+save_dir = ROOT / "src" / "models"
+save_dir.mkdir(parents=True, exist_ok=True)
+
+answer = input("Save tuned model? (y/n): ").strip().lower()
+if answer == "y":
+    path = save_dir / "model_rf_tuned.joblib"
+    joblib.dump(clf_best, path)
+    print(f"Model saved to {path}")
 
 print("\nDone.")

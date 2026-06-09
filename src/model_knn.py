@@ -18,6 +18,7 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+import joblib
 
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -94,8 +95,6 @@ print(f"F1 (macro): {f1_score(y_test, y_pred, average='macro', zero_division=0):
 print("\nClassification Report:")
 print(classification_report(y_test, y_pred, zero_division=0))
 
-print("\nDone.")
-
 # ---------------------------------------------------------------------------
 # 6. KNN Hyperparameter Tuning (GridSearchCV)
 # ---------------------------------------------------------------------------
@@ -140,11 +139,25 @@ print(f"F1 (macro): {f1_score(y_test, y_pred_tuned, average='macro', zero_divisi
 print("\nClassification Report (Tuned):")
 print(classification_report(y_test, y_pred_tuned, zero_division=0))
 
-# Comparison: baseline vs tuned
+# ---------------------------------------------------------------------------
+# 8. Baseline vs Tuned Comparison
+# ---------------------------------------------------------------------------
 print("\n=== Baseline vs Tuned Comparison ===")
 print(f"Baseline F1 (macro): {f1_score(y_test, y_pred, average='macro', zero_division=0):.4f}")
 print(f"Tuned    F1 (macro): {f1_score(y_test, y_pred_tuned, average='macro', zero_division=0):.4f}")
 print(f"Baseline F1 (wtd)  : {f1_score(y_test, y_pred, average='weighted', zero_division=0):.4f}")
 print(f"Tuned    F1 (wtd)  : {f1_score(y_test, y_pred_tuned, average='weighted', zero_division=0):.4f}")
+
+# ---------------------------------------------------------------------------
+# 9. Optional — save tuned model
+# ---------------------------------------------------------------------------
+save_dir = ROOT / "src" / "models"
+save_dir.mkdir(parents=True, exist_ok=True)
+
+answer = input("Save tuned model? (y/n): ").strip().lower()
+if answer == "y":
+    path = save_dir / "model_knn_tuned.joblib"
+    joblib.dump(best_clf, path)
+    print(f"Model saved to {path}")
 
 print("\nDone.")
