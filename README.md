@@ -170,7 +170,7 @@ K-Nearest Neighbors (KNN) is suitable for this problem because it classifies an 
 
 ### Random Forest
 
-An ensemble of decision trees tolerant of non-linear sensor interactions and resistant to noisy data (see Terms — Ensemble, n_estimators). Uses `class_weight="balanced"` (see Terms — class_weight) for class imbalance. Sweeps n_estimators 10 to 300, selecting the best value via macro F1-score.
+An ensemble of decision trees tolerant of non-linear sensor interactions and resistant to noisy data (see Terms — Ensemble, n_estimators). Uses `class_weight="balanced"` (see Terms — class_weight) for class imbalance. Tunes `n_estimators`, `max_depth`, `min_samples_split`, `min_samples_leaf`, and `max_features` via `GridSearchCV` with 5-fold CV and macro F1 scoring.
 
 ### Logistic Regression
 
@@ -180,25 +180,15 @@ A linear classifier valued for interpretability — coefficients trace which sen
 
 A distance-based classifier that captures non-linear thresholds and sensor clusters (see Terms — GridSearchCV). StandardScaler prevents large-scale sensors from dominating distance (see Terms — StandardScaler). Tunes neighbor counts, distance metrics, and weight configurations via GridSearchCV with 5-fold CV and macro F1 scoring.
 
-### clean.py 
-
-The code defines a data cleaning function, clean_gas_monitoring(), which takes a dataset as input and returns a cleaned version of it. It first identifies invalid sensor readings, such as temperatures above 60°C, humidity values outside the 0–100% range, and negative CO₂ readings, replacing them with missing values (NaN) before filling them with the median of the respective columns. Missing values in categorical or discrete variables, such as CO_GasSensor and Ambient Light Level, are filled using the most frequent value (mode), while MetalOxideSensor_Unit2 uses median imputation. Finally, the code standardizes different text representations of HVAC operation modes and activity levels using predefined mapping dictionaries, ensuring that the same category is represented consistently throughout the dataset. This results in a cleaner, more reliable dataset that is ready for further analysis or machine learning.
-
-### Preprocessing (LR, KNN)
-
-**StandardScaler** — A preprocessing step that rescales numeric features to mean 0 and variance 1. Required by LR so L2 regularisation treats all features fairly; required by KNN so large-scale features don't dominate distance calculations.
-
-### Shared Configuration (RF, LR)
-
-**class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
-
 ## Tuning
+
+All three models tune hyperparameters, but each asks a different question about the data. KNN and RF both use `GridSearchCV` — a generic search tool that tries every combination in a provided grid — but the grids themselves control completely different aspects of each algorithm. KNN's grid asks *"how should similarity be measured and how should neighbours vote?"* (distance metric, `k`, weights). RF's grid asks *"how complex should each decision tree be?"* (depth, split criteria, leaf size). LR uses a manual sweep of regularisation strength `C` — a simpler axis since LR has fewer knobs to turn. Keeping each grid in its own model file makes it clear these are model-specific strategies, not a shared tuning procedure.
 
 ### Random Forest
 
 **Ensemble** — A technique that combines multiple weak models (decision trees) to produce a stronger prediction. Random Forest builds hundreds of trees on random subsets of data and averages their outputs, reducing overfitting compared to a single tree.
 
-**n_estimators** — The number of decision trees in the Random Forest. More trees generally improve performance but increase training time. RF sweeps this from 10 to 300 to find the optimal value.
+**GridSearchCV** — An automated search that tries every combination of hyperparameters using cross-validation, then picks the combination with the best score. RF searches over `n_estimators`, `max_depth`, `min_samples_split`, `min_samples_leaf`, and `max_features`.
 
 ### Logistic Regression
 
@@ -213,6 +203,14 @@ The code defines a data cleaning function, clean_gas_monitoring(), which takes a
 ### K-Nearest Neighbors
 
 **GridSearchCV** — An automated search that tries every combination of hyperparameters (e.g., different neighbor counts and distance metrics for KNN) using cross-validation, then picks the combination with the best score.
+
+### Preprocessing (LR, KNN)
+
+**StandardScaler** — A preprocessing step that rescales numeric features to mean 0 and variance 1. Required by LR so L2 regularisation treats all features fairly; required by KNN so large-scale features don't dominate distance calculations.
+
+### Shared Configuration (RF, LR)
+
+**class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
 
 ## Metrics
 
@@ -282,7 +280,7 @@ Each model performs these steps:
 | 3. Split | Calls `split_features_target()` to separate features from target (`Activity Level`), then `split_data()` for stratified 70/30 train/test |
 | 4. Scale & Encode | Calls `scale_features()` (`StandardScaler`) + `encode_categoricals()` (one-hot encoding + column alignment) from `src/lib/preprocess.py`. RF skips scaling (tree-based models are scale-invariant) |
 | 5. Train baseline | Fits default classifier, prints accuracy, precision, recall, F1, and classification report |
-| 6. Tune | Hyperparameter search: RF sweeps `n_estimators` 10–300; LR sweeps regularization strength `C`; KNN uses `GridSearchCV` over neighbors, metrics, and weights |
+| 6. Tune | Hyperparameter search: RF uses `GridSearchCV` over `n_estimators`, `max_depth`, `min_samples_split`, `min_samples_leaf`, and `max_features` with 5-fold CV; LR sweeps regularization strength `C`; KNN uses `GridSearchCV` over neighbors, metrics, and weights with 5-fold CV |
 | 7. Train tuned | Re-fits classifier with best hyperparameters, prints accuracy, precision, recall, F1, and classification report |
 | 8. Compare | Prints a side-by-side Baseline vs Tuned comparison of macro F1 and weighted F1 to quantify improvement from tuning |
 | 9. Save | Prompts user to save the tuned model with `joblib` (y/n) to `src/models/` |

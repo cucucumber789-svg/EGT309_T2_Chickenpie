@@ -2,12 +2,10 @@ import sys
 import warnings
 from pathlib import Path
 
-import pandas as pd
-
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from lib.config import RANDOM_STATE, RF_CLASS_WEIGHT, RF_N_ESTIMATORS, RF_N_JOBS, RF_N_TREES_RANGE, ZERO_DIVISION
+from lib.config import RANDOM_STATE, RF_CLASS_WEIGHT, RF_CV_SPLITS, RF_N_ESTIMATORS, RF_N_JOBS, RF_PARAM_GRID, RF_SCORING, RF_VERBOSE, ZERO_DIVISION
 from lib.load_data import load_data, split_data, split_features_target
 from lib.preprocess import encode_categoricals
 from lib.clean import clean_gas_monitoring
@@ -21,6 +19,7 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
 )
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 import joblib
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -70,40 +69,31 @@ print("\nClassification Report:")
 print(classification_report(y_test, y_pred_default, zero_division=ZERO_DIVISION))
 
 # ---------------------------------------------------------------------------
-# 6. Hyperparameter tuning — n_estimators sweep
+# 6. Hyperparameter tuning — GridSearchCV over RF params
 # ---------------------------------------------------------------------------
-f1_list = []
-
-for n_trees in RF_N_TREES_RANGE:
-    clf_tmp = RandomForestClassifier(
-        n_estimators=n_trees,
+cv = StratifiedKFold(n_splits=RF_CV_SPLITS, shuffle=True, random_state=RANDOM_STATE)
+grid_search = GridSearchCV(
+    estimator=RandomForestClassifier(
         class_weight=RF_CLASS_WEIGHT,
         random_state=RANDOM_STATE,
-        n_jobs=RF_N_JOBS,
-    )
-    clf_tmp.fit(X_train, y_train)
-    y_pred_tmp = clf_tmp.predict(X_test)
-    f1 = f1_score(y_test, y_pred_tmp, average="macro", zero_division=ZERO_DIVISION)
-    f1_list.append({"n_trees": n_trees, "f1_macro": round(f1, 4)})
-
-results_df = pd.DataFrame(f1_list).set_index("n_trees")
-print("\n=== n_estimators Sweep Results (macro F1) ===")
-print(results_df.to_string())
-
-# ---------------------------------------------------------------------------
-# 7. Best model — re-train with optimal n_estimators
-# ---------------------------------------------------------------------------
-best_n = int(results_df["f1_macro"].idxmax())
-print(f"\nBest n_estimators: {best_n}")
-
-clf_best = RandomForestClassifier(
-    n_estimators=best_n,
-    class_weight=RF_CLASS_WEIGHT,
-    random_state=RANDOM_STATE,
+    ),
+    param_grid=RF_PARAM_GRID,
+    scoring=RF_SCORING,
+    cv=cv,
     n_jobs=RF_N_JOBS,
+    verbose=RF_VERBOSE,
 )
-clf_best.fit(X_train, y_train)
-y_pred_best = clf_best.predict(X_test)
+grid_search.fit(X_train, y_train)
+
+print("\n=== Random Forest Hyperparameter Tuning Results ===")
+print(f"Best Parameters : {grid_search.best_params_}")
+print(f"Best CV F1 Score: {grid_search.best_score_:.4f}")
+
+# ---------------------------------------------------------------------------
+# 7. Evaluate best model on test set
+# ---------------------------------------------------------------------------
+best_clf = grid_search.best_estimator_
+y_pred_best = best_clf.predict(X_test)
 
 print("\n=== Optimized Random Forest ===")
 print(f"Accuracy  : {accuracy_score(y_test, y_pred_best):.4f}")
@@ -132,7 +122,7 @@ save_dir.mkdir(parents=True, exist_ok=True)
 answer = input("Save tuned model? (y/n): ").strip().lower()
 if answer == "y":
     path = save_dir / "model_rf_tuned.joblib"
-    joblib.dump(clf_best, path)
+    joblib.dump(best_clf, path)
     print(f"Model saved to {path}")
 
 print("\nDone.")
