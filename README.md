@@ -184,6 +184,14 @@ A distance-based classifier that captures non-linear thresholds and sensor clust
 
 The code defines a data cleaning function, clean_gas_monitoring(), which takes a dataset as input and returns a cleaned version of it. It first identifies invalid sensor readings, such as temperatures above 60°C, humidity values outside the 0–100% range, and negative CO₂ readings, replacing them with missing values (NaN) before filling them with the median of the respective columns. Missing values in categorical or discrete variables, such as CO_GasSensor and Ambient Light Level, are filled using the most frequent value (mode), while MetalOxideSensor_Unit2 uses median imputation. Finally, the code standardizes different text representations of HVAC operation modes and activity levels using predefined mapping dictionaries, ensuring that the same category is represented consistently throughout the dataset. This results in a cleaner, more reliable dataset that is ready for further analysis or machine learning.
 
+### Preprocessing (LR, KNN)
+
+**StandardScaler** — A preprocessing step that rescales numeric features to mean 0 and variance 1. Required by LR so L2 regularisation treats all features fairly; required by KNN so large-scale features don't dominate distance calculations.
+
+### Shared Configuration (RF, LR)
+
+**class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
+
 ## Tuning
 
 ### Random Forest
@@ -236,15 +244,7 @@ The Logistic Regression model achieved an accuracy of 60.7%, with a precision of
 
 The K-Nearest Neighbors (KNN) model was improved through hyperparameter tuning, where 84 different parameter combinations were tested using 5-fold cross-validation. The best-performing configuration used 5 neighbors, the Manhattan distance metric, and distance-based weighting. After tuning, the model achieved an accuracy of 65.3%, precision of 63.7%, recall of 65.3%, weighted F1-score of 64.2%, and macro F1-score of 52.4%. The tuning process successfully improved the model's performance, increasing the macro F1-score from 47.2% to 52.4% and the weighted F1-score from 59.5% to 64.2%. The model performed best in identifying Low Activity cases, while also showing reasonable performance for Moderate Activity. Overall, hyperparameter tuning made the KNN model more accurate, balanced, and reliable for classifying activity levels.
 
-## Preprocessing (LR, KNN)
-
-**StandardScaler** — A preprocessing step that rescales numeric features to mean 0 and variance 1. Required by LR so L2 regularisation treats all features fairly; required by KNN so large-scale features don't dominate distance calculations.
-
-## Shared Configuration (RF, LR)
-
-**class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
-
-## Best Models
+## Best Model 
 
 Random Forest was the best-performing model because it achieved the highest accuracy (68.6%), Macro F1-score (56.2%) and Weighted F1-score (67.3%). These results show that it was the most effective at classifying the different activity levels of elderly residents using environmental sensor data. KNN was the second-best model, achieving 65.3% accuracy and a Macro F1-score of 52.4%, showing good performance but slightly lower overall results than Random Forest. Logistic Regression had the lowest performance, with 60.7% accuracy and a Macro F1-score of 52.3%. Since the goal is to accurately identify activity levels and support an early warning system for elderly care, Random Forest is the most suitable model as it provides the most reliable and balanced predictions across all activity categories.
 
