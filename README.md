@@ -180,6 +180,10 @@ A linear classifier valued for interpretability — coefficients trace which sen
 
 A distance-based classifier that captures non-linear thresholds and sensor clusters (see Terms — GridSearchCV). StandardScaler prevents large-scale sensors from dominating distance (see Terms — StandardScaler). Tunes neighbor counts, distance metrics, and weight configurations via GridSearchCV with 5-fold CV and macro F1 scoring.
 
+### clean.py 
+
+The code defines a data cleaning function, clean_gas_monitoring(), which takes a dataset as input and returns a cleaned version of it. It first identifies invalid sensor readings, such as temperatures above 60°C, humidity values outside the 0–100% range, and negative CO₂ readings, replacing them with missing values (NaN) before filling them with the median of the respective columns. Missing values in categorical or discrete variables, such as CO_GasSensor and Ambient Light Level, are filled using the most frequent value (mode), while MetalOxideSensor_Unit2 uses median imputation. Finally, the code standardizes different text representations of HVAC operation modes and activity levels using predefined mapping dictionaries, ensuring that the same category is represented consistently throughout the dataset. This results in a cleaner, more reliable dataset that is ready for further analysis or machine learning.
+
 ## Tuning
 
 ### Random Forest
@@ -202,7 +206,7 @@ A distance-based classifier that captures non-linear thresholds and sensor clust
 
 **GridSearchCV** — An automated search that tries every combination of hyperparameters (e.g., different neighbor counts and distance metrics for KNN) using cross-validation, then picks the combination with the best score.
 
-## Terms
+## Metrics
 
 ### Metrics (all models)
 
