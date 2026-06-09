@@ -108,7 +108,35 @@ gas_monitoring.db.example  (canonical raw data, never modified)
 - **seaborn** — Statistical visualisations (used in EDA notebook only)
 - **matplotlib** — Plotting (used in EDA notebook only)
 
-## Metrics used
+## Justification
+
+### Random Forest
+
+Random Forest is well-suited for this elderly activity monitoring problem because it can effectively classify residents' activity levels using multiple environmental and air-quality sensor readings, such as temperature, humidity, CO₂ levels, carbon monoxide levels, metal oxide sensor outputs, lighting conditions, and HVAC operation data. Since the relationships between these sensor measurements and activity levels are likely to be complex and non-linear, Random Forest can capture these patterns without requiring extensive data preprocessing or feature scaling. Additionally, its ensemble of decision trees improves prediction accuracy, handles noisy sensor data robustly, supports class imbalance through balanced class weights, and provides feature importance scores that help identify which environmental factors contribute most to predicting elderly residents' activity levels.
+
+### Logistic Regression
+
+Logistic regression is well-suited for this problem because the task involves predicting the activity level of elderly residents based on multiple environmental and sensor features , which is fundamentally a classification problem. As shown in the implementation, multinomial logistic regression can handle multiple activity classes while modelling the relationship between inputs like temperature, gas levels, and humidity and the probability of each activity outcome . It is particularly effective here because it produces interpretable coefficients, allowing the team to identify which environmental factors most influence activity levels—an important requirement of the task. Additionally, with techniques such as feature scaling, one-hot encoding, and class balancing already applied in the pipeline , logistic regression can deliver stable, efficient, and reasonably accurate predictions, making it a strong baseline model for developing an early warning system in elderly care monitoring.
+
+### KNN Model
+
+K-Nearest Neighbors (KNN) is suitable for this problem because it classifies an elderly resident's activity level by comparing current sensor readings with similar historical observations. Since residents with similar environmental conditions—such as temperature, humidity, CO₂ levels, carbon monoxide levels, and lighting conditions—are likely to exhibit similar activity patterns, KNN can effectively identify these relationships without making assumptions about the underlying data distribution. By measuring the similarity between sensor readings and assigning the most common activity level among the nearest neighbours, KNN provides a simple yet effective approach for detecting activity patterns in smart-home monitoring data.
+
+## How the models work
+
+### Random Forest
+
+An ensemble of decision trees tolerant of non-linear sensor interactions and resistant to noisy data (see Terms — Ensemble, n_estimators). Uses `class_weight="balanced"` (see Terms — class_weight) for class imbalance. Sweeps n_estimators 10 to 300, selecting the best value via macro F1-score.
+
+### Logistic Regression
+
+A linear classifier valued for interpretability — coefficients trace which sensors drive predictions (see Terms — Multinomial, L2 regularization, Regularization strength (C), L-BFGS). StandardScaler ensures fair L2 penalisation (see Terms — StandardScaler). Uses `class_weight="balanced"` (see Terms — class_weight). Sweeps C 0.001 to 100 via macro F1-score, suppressing noisy features (Temperature, Humidity) while preserving sensor signal.
+
+### K-Nearest Neighbors
+
+A distance-based classifier that captures non-linear thresholds and sensor clusters (see Terms — GridSearchCV). StandardScaler prevents large-scale sensors from dominating distance (see Terms — StandardScaler). Tunes neighbor counts, distance metrics, and weight configurations via GridSearchCV with 5-fold CV and macro F1 scoring.
+
+### Metrics used (Recommended)
 
 For an eldercare early warning system, F1-Score is selected as the primary evaluation metric over standard classification accuracy due to inherent class imbalances in smart-home sensor logs. Because elderly residents spend a disproportionate amount of time resting, the dataset is naturally heavily skewed toward "Low Activity" instances. Relying on standard accuracy would reward a naive model that consistently predicts the majority class while failing entirely to catch critical movement transitions. F1-Score mitigates this bias by calculating the precision and recall for each activity class independently and taking their unweighted average. This ensures that "Low", "Moderate", and "High" activity states are treated with equal importance, directly penalizing the pipeline if it fails to accurately detect less frequent but potentially life-saving activity shifts.
 
@@ -134,13 +162,15 @@ For an eldercare early warning system, F1-Score is selected as the primary evalu
 
 **class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
 
-### Random Forest
+### Tuning
+
+## Random Forest
 
 **Ensemble** — A technique that combines multiple weak models (decision trees) to produce a stronger prediction. Random Forest builds hundreds of trees on random subsets of data and averages their outputs, reducing overfitting compared to a single tree.
 
 **n_estimators** — The number of decision trees in the Random Forest. More trees generally improve performance but increase training time. RF sweeps this from 10 to 300 to find the optimal value.
 
-### Logistic Regression
+## Logistic Regression
 
 **Multinomial** — A classification strategy that treats all classes simultaneously using a softmax function, producing a probability for each class that sums to 1.
 
@@ -150,21 +180,9 @@ For an eldercare early warning system, F1-Score is selected as the primary evalu
 
 **L-BFGS** — The default optimisation algorithm used by Logistic Regression. It iteratively adjusts coefficients to minimise the loss function (error + L2 penalty). Unlike tree-based models (RF) or distance-based models (KNN), LR needs an optimiser to find its coefficients.
 
-### K-Nearest Neighbors
-
-**GridSearchCV** — An automated search that tries every combination of hyperparameters (e.g., different neighbor counts and distance metrics for KNN) using cross-validation, then picks the combination with the best score.
-
-## Random Forest
-
-An ensemble of decision trees tolerant of non-linear sensor interactions and resistant to noisy data (see Terms — Ensemble, n_estimators). Uses `class_weight="balanced"` (see Terms — class_weight) for class imbalance. Sweeps n_estimators 10 to 300, selecting the best value via macro F1-score.
-
-## Logistic Regression
-
-A linear classifier valued for interpretability — coefficients trace which sensors drive predictions (see Terms — Multinomial, L2 regularization, Regularization strength (C), L-BFGS). StandardScaler ensures fair L2 penalisation (see Terms — StandardScaler). Uses `class_weight="balanced"` (see Terms — class_weight). Sweeps C 0.001 to 100 via macro F1-score, suppressing noisy features (Temperature, Humidity) while preserving sensor signal.
-
 ## K-Nearest Neighbors
 
-A distance-based classifier that captures non-linear thresholds and sensor clusters (see Terms — GridSearchCV). StandardScaler prevents large-scale sensors from dominating distance (see Terms — StandardScaler). Tunes neighbor counts, distance metrics, and weight configurations via GridSearchCV with 5-fold CV and macro F1 scoring.
+**GridSearchCV** — An automated search that tries every combination of hyperparameters (e.g., different neighbor counts and distance metrics for KNN) using cross-validation, then picks the combination with the best score.
 
 ## Training
 
