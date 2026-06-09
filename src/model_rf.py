@@ -129,4 +129,13 @@ print(f"F1 (macro): {f1_score(y_test, y_pred_best, average='macro', zero_divisio
 print("\nClassification Report:")
 print(classification_report(y_test, y_pred_best, zero_division=0))
 
+# ---------------------------------------------------------------------------
+# 8. Baseline vs Tuned Comparison
+# ---------------------------------------------------------------------------
+print("\n=== Baseline vs Tuned Comparison ===")
+print(f"Baseline F1 (macro): {f1_score(y_test, y_pred_default, average='macro', zero_division=0):.4f}")
+print(f"Tuned    F1 (macro): {f1_score(y_test, y_pred_best, average='macro', zero_division=0):.4f}")
+print(f"Baseline F1 (wtd)  : {f1_score(y_test, y_pred_default, average='weighted', zero_division=0):.4f}")
+print(f"Tuned    F1 (wtd)  : {f1_score(y_test, y_pred_best, average='weighted', zero_division=0):.4f}")
+
 print("\nDone.")

@@ -197,5 +197,6 @@ Each model performs these steps:
 | 4. Scale | Applies `StandardScaler` to numeric features (except Random Forest, which is scale-invariant) |
 | 5. Train | Fits the classifier with tuning: RF sweeps `n_estimators` 10–300; LR sweeps regularization strength; KNN uses GridSearchCV over neighbors, metrics, and weights |
 | 6. Evaluate | Prints accuracy, precision, recall, F1, and full classification report |
+| 7. Compare | Prints a side-by-side Baseline vs Tuned comparison of macro F1 and weighted F1 to quantify improvement from tuning |
 
 All output is printed to the console
