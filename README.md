@@ -156,16 +156,6 @@ If everything lived in one file, every tweak — even changing `TEST_SIZE` — w
 - **seaborn** — Statistical visualisations (used in EDA notebook only)
 - **matplotlib** — Plotting (used in EDA notebook only)
 
-## Terms
-
-### Preprocessing (LR, KNN)
-
-**StandardScaler** — A preprocessing step that rescales numeric features to mean 0 and variance 1. Required by LR so L2 regularisation treats all features fairly; required by KNN so large-scale features don't dominate distance calculations.
-
-### Shared Configuration (RF, LR)
-
-**class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
-
 ## Justification
 
 ### Random Forest
@@ -184,7 +174,7 @@ K-Nearest Neighbors (KNN) is suitable for this problem because it classifies an 
 
 ### Random Forest
 
-An ensemble of decision trees tolerant of non-linear sensor interactions and resistant to noisy data (see Terms — Ensemble, n_estimators). Uses `class_weight="balanced"` (see Terms — class_weight) for class imbalance. Tunes `n_estimators`, `max_depth`, `min_samples_split`, `min_samples_leaf`, and `max_features` via `GridSearchCV` with 5-fold CV and macro F1 scoring.
+An ensemble of decision trees tolerant of non-linear sensor interactions and resistant to noisy data (see Terms — Ensemble). Uses `class_weight="balanced"` (see Terms — class_weight) for class imbalance. Tunes `n_estimators`, `max_depth`, `min_samples_split`, `min_samples_leaf`, and `max_features` via `GridSearchCV` with 5-fold CV and macro F1 scoring.
 
 ### Logistic Regression
 
@@ -194,9 +184,9 @@ A linear classifier valued for interpretability — coefficients trace which sen
 
 A distance-based classifier that captures non-linear thresholds and sensor clusters (see Terms — GridSearchCV). StandardScaler prevents large-scale sensors from dominating distance (see Terms — StandardScaler). Tunes neighbor counts, distance metrics, and weight configurations via GridSearchCV with 5-fold CV and macro F1 scoring.
 
-## Tuning
-
 All three models tune hyperparameters, but each asks a different question about the data. KNN and RF both use `GridSearchCV` — a generic search tool that tries every combination in a provided grid — but the grids themselves control completely different aspects of each algorithm. KNN's grid asks *"how should similarity be measured and how should neighbours vote?"* (distance metric, `k`, weights). RF's grid asks *"how complex should each decision tree be?"* (depth, split criteria, leaf size). LR uses a manual sweep of regularisation strength `C` — a simpler axis since LR has fewer knobs to turn. Keeping each grid in its own model file makes it clear these are model-specific strategies, not a shared tuning procedure.
+
+## Glossary
 
 ### Random Forest
 
@@ -218,9 +208,15 @@ All three models tune hyperparameters, but each asks a different question about 
 
 **GridSearchCV** — An automated search that tries every combination of hyperparameters (e.g., different neighbor counts and distance metrics for KNN) using cross-validation, then picks the combination with the best score.
 
-## Metrics
+### Preprocessing (LR, KNN)
 
-### Metrics (all models)
+**StandardScaler** — A preprocessing step that rescales numeric features to mean 0 and variance 1. Required by LR so L2 regularisation treats all features fairly; required by KNN so large-scale features don't dominate distance calculations.
+
+### Shared Configuration (RF, LR)
+
+**class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
+
+## Metrics
 
 **F1-Score** — The harmonic mean of precision and recall. Unlike accuracy (which counts correct vs incorrect), F1 balances false positives and false negatives. This is our primary metric because it punishes models that guess the majority class and ignore rare but critical events. A high F1-Score means both precision and recall are strong — few false alarms and few missed detections.
 
