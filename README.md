@@ -132,17 +132,13 @@ When a model calls `load_data()`, Python executes the function body inside `lib.
 
 **Why multiple files instead of one?** Each file in `lib/` addresses a concern that changes for a different reason:
 
-- `config.py`
-      Config.py acts as a central configuration file that stores parameters such as train-test split ratios, random seeds, and model hyperparameters, allowing all modules to use consistent settings. 
+- `config.py` acts as a central configuration file that stores parameters such as train-test split ratios, random seeds, and model hyperparameters, allowing all modules to use consistent settings. 
 
-- `clean.py`
-      Clean.py cleans the dataset by handling missing values, correcting invalid sensor readings, standardizing HVAC operation modes, and ensuring activity labels are consistent, which improves data quality before modelling. 
+- `clean.py` cleans the dataset by handling missing values, correcting invalid sensor readings, standardizing HVAC operation modes, and ensuring activity labels are consistent, which improves data quality before modelling. 
 
-- `preprocess.py` — changes when you swap scalers, encoding strategy, or pipeline steps
-      The preprocess.py file then prepares the cleaned data for machine learning by scaling numerical features using StandardScaler and converting categorical variables into numerical format through one-hot encoding, ensuring algorithms such as Logistic Regression and K-Nearest Neighbors can process the data effectively. 
+- `preprocess.py` prepares the cleaned data for machine learning by scaling numerical features using StandardScaler and converting categorical variables into numerical format through one-hot encoding, ensuring algorithms such as Logistic Regression and K-Nearest Neighbors can process the data effectively. 
 
-- `load_data.py`
-      Load_data.py connects to the SQLite database, loads the gas_monitoring dataset, separates the features (X) and target variable (Activity Level), and splits the data into training and testing sets while preserving the class distribution. 
+- `load_data.py` connects to the SQLite database, loads the gas_monitoring dataset, separates the features (X) and target variable (Activity Level), and splits the data into training and testing sets while preserving the class distribution. 
 
 If everything lived in one file, every tweak — even changing `TEST_SIZE` — would mean opening a monolithic utility with mixed concerns. Separating them keeps each change focused and makes the project easier to navigate.
 
