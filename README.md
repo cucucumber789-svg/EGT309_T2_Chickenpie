@@ -160,6 +160,16 @@ If everything lived in one file, every tweak — even changing `TEST_SIZE` — w
 - **seaborn** — Statistical visualisations (used in EDA notebook only)
 - **matplotlib** — Plotting (used in EDA notebook only)
 
+## Terms
+
+### Preprocessing (LR, KNN)
+
+**StandardScaler** — A preprocessing step that rescales numeric features to mean 0 and variance 1. Required by LR so L2 regularisation treats all features fairly; required by KNN so large-scale features don't dominate distance calculations.
+
+### Shared Configuration (RF, LR)
+
+**class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
+
 ## Justification
 
 ### Random Forest
@@ -211,14 +221,6 @@ All three models tune hyperparameters, but each asks a different question about 
 ### K-Nearest Neighbors
 
 **GridSearchCV** — An automated search that tries every combination of hyperparameters (e.g., different neighbor counts and distance metrics for KNN) using cross-validation, then picks the combination with the best score.
-
-### Preprocessing (LR, KNN)
-
-**StandardScaler** — A preprocessing step that rescales numeric features to mean 0 and variance 1. Required by LR so L2 regularisation treats all features fairly; required by KNN so large-scale features don't dominate distance calculations.
-
-### Shared Configuration (RF, LR)
-
-**class_weight="balanced"** — Automatically adjusts weights so minority classes (Moderate, High Activity) have higher importance during training, preventing the model from ignoring rare but critical events.
 
 ## Metrics
 
