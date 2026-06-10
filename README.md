@@ -180,6 +180,16 @@ A linear classifier valued for interpretability — coefficients trace which sen
 
 A distance-based classifier that captures non-linear thresholds and sensor clusters (see Terms — GridSearchCV). StandardScaler prevents large-scale sensors from dominating distance (see Terms — StandardScaler). Tunes neighbor counts, distance metrics, and weight configurations via GridSearchCV with 5-fold CV and macro F1 scoring.
 
+### Libraries
+
+Load_data.py connects to the SQLite database, loads the gas_monitoring dataset, separates the features (X) and target variable (Activity Level), and splits the data into training and testing sets while preserving the class distribution. 
+
+Clean.py cleans the dataset by handling missing values, correcting invalid sensor readings, standardizing HVAC operation modes, and ensuring activity labels are consistent, which improves data quality before modelling. 
+
+The preprocess.py file then prepares the cleaned data for machine learning by scaling numerical features using StandardScaler and converting categorical variables into numerical format through one-hot encoding, ensuring algorithms such as Logistic Regression and K-Nearest Neighbors can process the data effectively. 
+
+Config.py acts as a central configuration file that stores parameters such as train-test split ratios, random seeds, and model hyperparameters, allowing all modules to use consistent settings. 
+
 ## Tuning
 
 All three models tune hyperparameters, but each asks a different question about the data. KNN and RF both use `GridSearchCV` — a generic search tool that tries every combination in a provided grid — but the grids themselves control completely different aspects of each algorithm. KNN's grid asks *"how should similarity be measured and how should neighbours vote?"* (distance metric, `k`, weights). RF's grid asks *"how complex should each decision tree be?"* (depth, split criteria, leaf size). LR uses a manual sweep of regularisation strength `C` — a simpler axis since LR has fewer knobs to turn. Keeping each grid in its own model file makes it clear these are model-specific strategies, not a shared tuning procedure.
