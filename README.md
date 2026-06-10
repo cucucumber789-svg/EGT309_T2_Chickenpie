@@ -131,10 +131,18 @@ To change a parameter — for example, `TEST_SIZE` or a KNN `n_neighbors` value 
 When a model calls `load_data()`, Python executes the function body inside `lib.load_data`'s own namespace — `sqlite3`, `pandas`, and `train_test_split` are private to that module and invisible to the caller. The model file never imports or sees them. This encapsulation keeps each model script focused on model-specific logic (training, tuning, evaluation) while the shared infrastructure lives in the `lib/` package.
 
 **Why multiple files instead of one?** Each file in `lib/` addresses a concern that changes for a different reason:
-- `config.py` — the only file you need to touch when experimenting with hyperparameters, seeds, or split ratios
-- `clean.py` — evolves when EDA reveals new data issues or cleaning rules change
+
+- `config.py`
+      Config.py acts as a central configuration file that stores parameters such as train-test split ratios, random seeds, and model hyperparameters, allowing all modules to use consistent settings. 
+
+- `clean.py`
+      Clean.py cleans the dataset by handling missing values, correcting invalid sensor readings, standardizing HVAC operation modes, and ensuring activity labels are consistent, which improves data quality before modelling. 
+
 - `preprocess.py` — changes when you swap scalers, encoding strategy, or pipeline steps
-- `load_data.py` — rarely changes (database schema or split strategy updates)
+      The preprocess.py file then prepares the cleaned data for machine learning by scaling numerical features using StandardScaler and converting categorical variables into numerical format through one-hot encoding, ensuring algorithms such as Logistic Regression and K-Nearest Neighbors can process the data effectively. 
+
+- `load_data.py`
+      Load_data.py connects to the SQLite database, loads the gas_monitoring dataset, separates the features (X) and target variable (Activity Level), and splits the data into training and testing sets while preserving the class distribution. 
 
 If everything lived in one file, every tweak — even changing `TEST_SIZE` — would mean opening a monolithic utility with mixed concerns. Separating them keeps each change focused and makes the project easier to navigate.
 
@@ -179,16 +187,6 @@ A linear classifier valued for interpretability — coefficients trace which sen
 ### K-Nearest Neighbors
 
 A distance-based classifier that captures non-linear thresholds and sensor clusters (see Terms — GridSearchCV). StandardScaler prevents large-scale sensors from dominating distance (see Terms — StandardScaler). Tunes neighbor counts, distance metrics, and weight configurations via GridSearchCV with 5-fold CV and macro F1 scoring.
-
-### Libraries
-
-Load_data.py connects to the SQLite database, loads the gas_monitoring dataset, separates the features (X) and target variable (Activity Level), and splits the data into training and testing sets while preserving the class distribution. 
-
-Clean.py cleans the dataset by handling missing values, correcting invalid sensor readings, standardizing HVAC operation modes, and ensuring activity labels are consistent, which improves data quality before modelling. 
-
-The preprocess.py file then prepares the cleaned data for machine learning by scaling numerical features using StandardScaler and converting categorical variables into numerical format through one-hot encoding, ensuring algorithms such as Logistic Regression and K-Nearest Neighbors can process the data effectively. 
-
-Config.py acts as a central configuration file that stores parameters such as train-test split ratios, random seeds, and model hyperparameters, allowing all modules to use consistent settings. 
 
 ## Tuning
 
