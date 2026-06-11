@@ -66,6 +66,30 @@ pip install -r requirements.txt
    - Categorical cross-tabulations (HVAC mode, Time of Day, Ambient Light, CO_GasSensor vs. Activity Level)
    - Key finding: Metal Oxide sensors and CO2_ElectroChemicalSensor have the strongest predictive signal; Temperature and Humidity have near-zero correlation with the target
 
+## Temperature
+### histogram
+- The histogram on the left shows that majority of the readings are closely clustered between around 15°C and 30°C, with a separate small cluster of readings nearing 300°C.
+### box plot
+- The box plot on the right confirms the distribution showing a narrow main data range and a distinct group of outliers around 300°C.
+
+## Humidity
+### histogram
+- The histogram on the left shows that majority of the readings are closely clustered around 40% to 60%, this is the normal humidity range. The tiny bars scattered across the left and  right.
+### box plot
+- The box plot on the right gives us the confirmation by displaying an expected data ranged around 50% humidity while clearly showing the anomalous outlier data points stretching down to -50% and up to 200%.
+
+## CO2 Infrared Sensor
+### histogram
+- The histogram on the left displays that majority of the measurement peaks between 100 and 130 ppm. This shows  that majority of the time there are more people in the room. Making environment stuffy for the patients. Lower frequency readings gradually decreasing towards the extremes, showing that there are less people in the room. Therefore, less stuffy.
+### box plot
+- The box plot on the right confirms the reading by showing most of the time the ppm is highest.
+
+## CO2 ElectroChemical Sensor
+### histogram
+- The histogram on the left shows that Most measurements are concentrated between around 540 and 620 ppm, showing 2 distinct peaks within the main cluster. This shows the sensor decay and background noise. 
+### box plot
+- The box plot on the right confirms this central grouping with a median line sitting around 580 ppm while showing a small number of individual outliers scattered below 500ppm.
+
 ## File Structure & How It Works
 
 The project has two independent tracks that share cleaning rules but never depend on each other:
