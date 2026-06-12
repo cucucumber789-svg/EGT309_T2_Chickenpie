@@ -67,28 +67,40 @@ pip install -r requirements.txt
    - Key finding: Metal Oxide sensors and CO2_ElectroChemicalSensor have the strongest predictive signal; Temperature and Humidity have near-zero correlation with the target
 
 ## Temperature
+### Bar Chart
+- The bar chart displays a "Temperature Distribution" across five distinct temperature ranges, showing a highly bimodal or polarized dataset. Majority of the data points over 9,000 counts fall into the lowest temperature interval between approximately 6.60 and 66.94. On the other hand, there is a small secondary cluster of around 800 counts in the highest temperature range from 247.04 to 307.07, while the middle temperature intervals contain no data.
 ### histogram
 - The histogram on the left shows that majority of the readings are closely clustered between around 15°C and 30°C, with a separate small cluster of readings nearing 300°C.
 ### box plot
 - The box plot on the right confirms the distribution showing a narrow main data range and a distinct group of outliers around 300°C.
 
 ## Humidity
+### Bar Chart 
+- This chart shows the distribution of humidity data grouped into five ranges. The vast majority of the observations fall into the middle ranges specifically between -0.116 and 99.392 with the highest concentration nearly 5,000 counts sitting in the 49.638 to 99.392 bracket.
 ### histogram
 - The histogram on the left shows that majority of the readings are closely clustered around 40% to 60%, this is the normal humidity range. The tiny bars scattered across the left and right are in the data that should not exist physically.
 ### box plot
 - The box plot on the right gives us the confirmation by displaying an expected data ranged around 50% humidity while clearly showing the anomalous outlier data points stretching down to -50% and up to 200%.
 
 ## CO2 Infrared Sensor
+### Bar Chart
+- This bar chart shows the distribution of CO₂ infrared sensor readings, showing that most of the data is concentrated within the 84.666–135.735 range, with approximately 7,000 observations. The number of readings decreases significantly as the values move away from this central range, while the lowest and highest intervals contain relatively few observations. This suggests that the CO₂ sensor measurements are primarily clustered around moderate levels, indicating stable environmental conditions with only occasional extreme readings.
 ### histogram
 - The histogram on the left displays  majority of the measurement that peaks between 100 and 130 ppm. This shows that majority of the time there are more people in the room. Making environment stuffy for the patients. The smaller bars on the sides shows that the lower frequency readings are gradually decreasing towards the extremes. This means that there are less people in the room. Therefore, less stuffy.
 ### box plot
 - The box plot on the right confirms the reading by showing that the median is around 120ppm.
 
 ## CO2 ElectroChemical Sensor
+### Bar Chart
+- This bar chart shows the distribution of CO₂ electrochemical sensor readings, with the majority of observations concentrated in the 546.177–592.037 range, accounting for approximately 6,500 readings. A smaller number of readings, around 3,000 observations, fall within the 592.037–637.896 range, while very few readings appear in the lower ranges below 546.177. This indicates that the electrochemical sensor measurements are generally clustered at higher CO₂ levels, suggesting relatively consistent conditions with limited variation across the dataset.
 ### histogram
 - The histogram on the left shows that Most measurements are concentrated between around 540 and 620 ppm, showing 2 distinct peaks within the main cluster. This shows the sensor decay and background noise. 
 ### box plot
 - The box plot on the right confirms this central grouping with a median line sitting around 580 ppm while showing a small number of individual outliers scattered below 500ppm.
+
+## CO2 Gas Sensor
+### Bar Chart
+- This chart illustrates the frequency distribution of different categories or states registered by a CO (Carbon Monoxide) Gas Sensor. Unlike the previous continuous histograms, this data is categorical or discrete (labeled 0.0 through 4.0), sorted from most frequent to least frequent. State 1.0 is overwhelmingly the most common reading with over 4,500 occurrences, followed sequentially by 2.0, 0.0, 3.0, and finally 4.0 which has the fewest readings.
 
 ## File Structure & How It Works
 
