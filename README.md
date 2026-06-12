@@ -74,15 +74,15 @@ pip install -r requirements.txt
 
 ## Humidity
 ### histogram
-- The histogram on the left shows that majority of the readings are closely clustered around 40% to 60%, this is the normal humidity range. The tiny bars scattered across the left and  right.
+- The histogram on the left shows that majority of the readings are closely clustered around 40% to 60%, this is the normal humidity range. The tiny bars scattered across the left and right are in the data that should not exist physically.
 ### box plot
 - The box plot on the right gives us the confirmation by displaying an expected data ranged around 50% humidity while clearly showing the anomalous outlier data points stretching down to -50% and up to 200%.
 
 ## CO2 Infrared Sensor
 ### histogram
-- The histogram on the left displays that majority of the measurement peaks between 100 and 130 ppm. This shows  that majority of the time there are more people in the room. Making environment stuffy for the patients. Lower frequency readings gradually decreasing towards the extremes, showing that there are less people in the room. Therefore, less stuffy.
+- The histogram on the left displays  majority of the measurement that peaks between 100 and 130 ppm. This shows that majority of the time there are more people in the room. Making environment stuffy for the patients. The smaller bars on the sides shows that the lower frequency readings are gradually decreasing towards the extremes. This means that there are less people in the room. Therefore, less stuffy.
 ### box plot
-- The box plot on the right confirms the reading by showing most of the time the ppm is highest.
+- The box plot on the right confirms the reading by showing that the median is around 120ppm.
 
 ## CO2 ElectroChemical Sensor
 ### histogram
