@@ -76,7 +76,7 @@ pip install -r requirements.txt
 
 ## Humidity
 ### Bar Chart 
-- This chart shows the distribution of humidity data grouped into five ranges. The vast majority of the observations fall into the middle ranges specifically between -0.116 and 99.392 with the highest concentration nearly 5,000 counts sitting in the 49.638 to 99.392 bracket.
+- The chart shows the distribution of humidity data grouped into five ranges. The vast majority of the observations fall into the middle ranges specifically between -0.116 and 99.392 with the highest concentration nearly 5,000 counts sitting in the 49.638 to 99.392 bracket.
 ### histogram
 - The histogram on the left shows that majority of the readings are closely clustered around 40% to 60%, this is the normal humidity range. The tiny bars scattered across the left and right are in the data that should not exist physically.
 ### box plot
@@ -84,7 +84,7 @@ pip install -r requirements.txt
 
 ## CO2 Infrared Sensor
 ### Bar Chart
-- This bar chart shows the distribution of CO₂ infrared sensor readings, showing that most of the data is concentrated within the 84.666–135.735 range, with approximately 7,000 observations. The number of readings decreases significantly as the values move away from this central range, while the lowest and highest intervals contain relatively few observations. This suggests that the CO₂ sensor measurements are primarily clustered around moderate levels, indicating stable environmental conditions with only occasional extreme readings.
+- The bar chart shows that most CO2 infrared sensor readings fall within the 84.666 to 135.735 range, making it the most common measurement recorded. Fewer readings are found in the lower and higher ranges, while very few readings occur at the extreme ends. Overall, the chart shows that the CO2 levels were generally high concentration in the middle range during the monitoring period.
 ### histogram
 - The histogram on the left displays  majority of the measurement that peaks between 100 and 130 ppm. This shows that majority of the time there are more people in the room. Making environment stuffy for the patients. The smaller bars on the sides shows that the lower frequency readings are gradually decreasing towards the extremes. This means that there are less people in the room. Therefore, less stuffy.
 ### box plot
@@ -92,7 +92,7 @@ pip install -r requirements.txt
 
 ## CO2 ElectroChemical Sensor
 ### Bar Chart
-- This bar chart shows the distribution of CO₂ electrochemical sensor readings, with the majority of observations concentrated in the 546.177–592.037 range, accounting for approximately 6,500 readings. A smaller number of readings, around 3,000 observations, fall within the 592.037–637.896 range, while very few readings appear in the lower ranges below 546.177. This indicates that the electrochemical sensor measurements are generally clustered at higher CO₂ levels, suggesting relatively consistent conditions with limited variation across the dataset.
+- The bar chart shows that most CO₂ electrochemical sensor readings were between 546.177 and 592.037, making this the most common range recorded. The 592.037 to 637.896 range had the second-highest number of readings, while only a small number of readings fell between 500.318 and 546.177. No readings were observed in the lower ranges. Overall, the chart indicates that the CO₂ levels were generally stable and concentrated within the higher value ranges during the monitoring period.
 ### histogram
 - The histogram on the left shows that Most measurements are concentrated between around 540 and 620 ppm, showing 2 distinct peaks within the main cluster. This shows the sensor decay and background noise. 
 ### box plot
@@ -103,7 +103,7 @@ pip install -r requirements.txt
 - This chart shows the frequency distribution of different categories or states registered by a CO (Carbon Monoxide) Gas Sensor. Unlike the previous continuous histograms, this data is categorical or discrete (labeled 0.0 through 4.0), sorted from most frequent to least frequent. State 1.0 is overwhelmingly the most common reading with over 4,500 occurrences, followed sequentially by 2.0, 0.0, 3.0, and finally 4.0 which has the fewest readings.
 
 ### Metaloxide Sensors
-- These histograms shows the distributions of the four Metal Oxide Sensor (MOS) units, showing that all sensors have readings concentrated around a central range, forming approximately bell-shaped patterns. Unit 1 peaks around 470–490, Unit 2 around 720–740, Unit 3 around 670–700, and Unit 4 around 600–620, indicating the most frequently observed sensor values. While the majority of readings cluster near these central values, each sensor exhibits slight skewness and secondary peaks at higher ranges, suggesting occasional variations in environmental conditions. Overall, the distributions indicate that the metal oxide sensors produce relatively stable measurements with some degree of natural fluctuation.
+- These histograms shows the distributions of the four Metal Oxide Sensor (MOS) units, showing that all sensors have readings concentrated around a central range, forming approximately bell-shaped patterns. Unit 1 peaks around 470–490, Unit 2 around 720–740, Unit 3 around 670–700, and Unit 4 around 600–620, indicating the most frequently observed sensor values. While the majority of readings cluster near these central values, each sensor exhibits slight skewness and secondary peaks at higher ranges, suggesting occasional variations in environmental conditions. Overall, the distributions indicate that the metal oxide sensors produce relatively stable measurements with some degree of minor fluctuation.
 
 ### HVAC
 _ The bar chart shows the distribution of different HVAC operation modes, where a few modes dominate the dataset. The most common modes are cooling_active, maintenance_mode, heating_active, eco_mode, and ventilation_only, each with frequencies of around 1,400–1,500 occurrences. In contrast, the remaining modes appear much less frequently, with counts generally below 120. This indicates that the HVAC system spends most of its time operating in its primary modes, while combined or less common modes are rarely used. Overall, the data is somewhat imbalanced, with a small number of operation modes accounting for the majority of observations.
@@ -112,7 +112,7 @@ _ The bar chart shows the distribution of different HVAC operation modes, where 
 - The bar char shows the distribution of ambient light levels . The very_bright is the most common category with approximately 3,400 observations, followed by bright with around 2,700 observations. The frequency then decreases significantly for moderate light levels (about 1,500 observations), while dim and very_dim are the least common, with fewer than 1,000 observations each. This suggests that most of the recorded environments are well-lit, whereas low-light conditions occur much less frequently. Overall, the dataset leans more toward brighter ambient light levels.
 
 ### Activity Level
-- The bar chart shows the distribution of activity levels, with Low Activity being the most common category, accounting for over 5,000 observations. Moderate Activity is the second most frequent category with around 2,800 observations, while High Activity occurs much less often at approximately 1,100 observations. The remaining categories appear to be duplicate or inconsistently labeled versions of the activity levels and have relatively low frequencies. Overall, the data indicates that individuals spend most of their time engaged in low to moderate levels of activity, while high activity levels are comparatively rare.
+- The bar chart shows the distribution of activity levels, with Low Activity being the most common category, accounting for over 5,000 observations. Moderate Activity is the second most frequent category with around 2,800 observations, while High Activity occurs much less often at approximately 1,100 observations. The remaining categories appear to be duplicate or inconsistently labeled versions of the activity levels and have relatively low frequencies. Overall, the data indicates that the elderly spend most of their time engaged in low to moderate levels of activity, while high activity levels are comparatively rare.
 
 ## File Structure & How It Works
 
