@@ -100,7 +100,19 @@ pip install -r requirements.txt
 
 ## CO2 Gas Sensor
 ### Bar Chart
-- This chart illustrates the frequency distribution of different categories or states registered by a CO (Carbon Monoxide) Gas Sensor. Unlike the previous continuous histograms, this data is categorical or discrete (labeled 0.0 through 4.0), sorted from most frequent to least frequent. State 1.0 is overwhelmingly the most common reading with over 4,500 occurrences, followed sequentially by 2.0, 0.0, 3.0, and finally 4.0 which has the fewest readings.
+- This chart shows the frequency distribution of different categories or states registered by a CO (Carbon Monoxide) Gas Sensor. Unlike the previous continuous histograms, this data is categorical or discrete (labeled 0.0 through 4.0), sorted from most frequent to least frequent. State 1.0 is overwhelmingly the most common reading with over 4,500 occurrences, followed sequentially by 2.0, 0.0, 3.0, and finally 4.0 which has the fewest readings.
+
+### Metaloxide Sensors
+- These histograms shows the distributions of the four Metal Oxide Sensor (MOS) units, showing that all sensors have readings concentrated around a central range, forming approximately bell-shaped patterns. Unit 1 peaks around 470–490, Unit 2 around 720–740, Unit 3 around 670–700, and Unit 4 around 600–620, indicating the most frequently observed sensor values. While the majority of readings cluster near these central values, each sensor exhibits slight skewness and secondary peaks at higher ranges, suggesting occasional variations in environmental conditions. Overall, the distributions indicate that the metal oxide sensors produce relatively stable measurements with some degree of natural fluctuation.
+
+### HVAC
+_ The bar chart shows the distribution of different HVAC operation modes, where a few modes dominate the dataset. The most common modes are cooling_active, maintenance_mode, heating_active, eco_mode, and ventilation_only, each with frequencies of around 1,400–1,500 occurrences. In contrast, the remaining modes appear much less frequently, with counts generally below 120. This indicates that the HVAC system spends most of its time operating in its primary modes, while combined or less common modes are rarely used. Overall, the data is somewhat imbalanced, with a small number of operation modes accounting for the majority of observations.
+
+### Ambient Light Level
+- The bar char shows the distribution of ambient light levels . The very_bright is the most common category with approximately 3,400 observations, followed by bright with around 2,700 observations. The frequency then decreases significantly for moderate light levels (about 1,500 observations), while dim and very_dim are the least common, with fewer than 1,000 observations each. This suggests that most of the recorded environments are well-lit, whereas low-light conditions occur much less frequently. Overall, the dataset leans more toward brighter ambient light levels.
+
+### Activity Level
+- The bar chart shows the distribution of activity levels, with Low Activity being the most common category, accounting for over 5,000 observations. Moderate Activity is the second most frequent category with around 2,800 observations, while High Activity occurs much less often at approximately 1,100 observations. The remaining categories appear to be duplicate or inconsistently labeled versions of the activity levels and have relatively low frequencies. Overall, the data indicates that individuals spend most of their time engaged in low to moderate levels of activity, while high activity levels are comparatively rare.
 
 ## File Structure & How It Works
 
